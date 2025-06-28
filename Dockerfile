@@ -2,8 +2,8 @@
 # check=error=true
 
 # This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
-# docker build -t facturacion_system .
-# docker run -d -p 80:80 -e RAILS_MASTER_KEY=<value from config/master.key> --name facturacion_system facturacion_system
+# docker build -t Proyecto4-Lenguajes .
+# docker run -d -p 80:80 -e RAILS_MASTER_KEY=<value from config/master.key> --name Proyecto4-Lenguajes Proyecto4-Lenguajes
 
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
