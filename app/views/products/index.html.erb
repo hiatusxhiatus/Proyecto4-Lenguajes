@@ -1,68 +1,115 @@
-<!-- app/views/products/index.html.erb -->
-<div class="page-header-widget">
-  <div class="page-header-content">
-    <h1 class="page-title">Gestión de Inventario</h1>
-    <div class="page-header-actions">
-      <%= link_to "Nuevo Producto", new_product_path, class: "btn btn-primary" %>
-    </div>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">📦 Inventario</h1>
+    <p style="color: var(--text-muted); margin-top: 0.5rem;">Gestiona tu catálogo de productos</p>
+  </div>
+  <div class="page-actions">
+    <%= link_to "Nuevo Producto", new_product_path, class: "btn btn-primary" %>
   </div>
 </div>
 
 <% if @low_stock_products.any? %>
   <div class="alert alert-warning">
-    <div class="alert-content">
-      <strong>¡Alerta de Stock Bajo!</strong>
-      Los siguientes productos tienen menos de 5 unidades:
-      <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
-        <% @low_stock_products.each do |product| %>
-          <li><%= product.name %> (Stock: <%= product.stock %>)</li>
-        <% end %>
-      </ul>
-    </div>
-    <button class="alert-close" onclick="this.parentElement.style.display='none'">&times;</button>
+    <strong>⚠️ Stock Crítico</strong><br>
+    <% @low_stock_products.each_with_index do |product, index| %>
+      <%= product.name %> (<%= product.stock %> unidades)<%= ", " unless index == @low_stock_products.length - 1 %>
+    <% end %>
   </div>
 <% end %>
 
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value"><%= @products.count %></div>
+    <div class="stat-label">Productos Totales</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value currency">₡<%= number_with_delimiter(@products.sum { |p| p.price * p.stock }, delimiter: ",") %></div>
+    <div class="stat-label">Valor de Inventario</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color: var(--<%= @low_stock_products.any? ? 'warning' : 'success' %>);"><%= @products.sum(&:stock) %></div>
+    <div class="stat-label">Unidades en Stock</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color: var(--warning);"><%= @low_stock_products.count %></div>
+    <div class="stat-label">Productos con Stock Bajo</div>
+  </div>
+</div>
+
 <% if @products.any? %>
-  <div class="table-widget">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Precio</th>
-          <th>Stock</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @products.each do |product| %>
-          <tr class="<%= 'table-row-warning' if product.low_stock? %>">
-            <td><%= product.id %></td>
-            <td><%= product.name %></td>
-            <td>₡<%= sprintf('%.2f', product.price) %></td>
-            <td><%= product.stock %></td>
-            <td>
-              <span class="badge badge-<%= product.low_stock? ? 'warning' : 'success' %>">
-                <%= product.low_stock? ? "Stock Bajo" : "OK" %>
-              </span>
-            </td>
-            <td>
-              <%= link_to "Ver", product_path(product), class: "btn btn-primary btn-small" %>
-              <%= link_to "Editar", edit_product_path(product), class: "btn btn-secondary btn-small" %>
-              <%= button_to "Eliminar", product_path(product), 
-                           method: :delete,
-                           class: "btn btn-danger btn-small",
-                           form: { onsubmit: "return confirm('¿Estás seguro?')" } %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+  <div class="card fade-in">
+    <div class="card-header">
+      <h3 class="card-title">Catálogo de Productos</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Estado</th>
+              <th>Valor Total</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @products.each do |product| %>
+              <tr style="<%= 'background: rgba(245, 158, 11, 0.05);' if product.low_stock? %>">
+                <td>
+                  <div style="font-weight: 600; color: var(--text-primary);"><%= product.name %></div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">ID: <%= product.id %></div>
+                </td>
+                <td>
+                  <span class="currency">₡<%= number_with_delimiter(product.price, delimiter: ",") %></span>
+                </td>
+                <td>
+                  <span style="font-weight: 600; font-size: 1.1rem; color: var(--<%= product.low_stock? ? 'warning' : 'text-primary' %>);">
+                    <%= product.stock %>
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-<%= product.low_stock? ? 'warning' : 'success' %>">
+                    <%= product.low_stock? ? "Stock Bajo" : "Disponible" %>
+                  </span>
+                </td>
+                <td>
+                  <span class="currency">₡<%= number_with_delimiter(product.price * product.stock, delimiter: ",") %></span>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <%= link_to "Ver", product_path(product), class: "btn btn-sm btn-secondary" %>
+                    <%= link_to "Editar", edit_product_path(product), class: "btn btn-sm btn-secondary" %>
+                    <%= button_to "×", product_path(product), 
+                                 method: :delete,
+                                 class: "btn btn-sm btn-danger",
+                                 title: "Eliminar producto",
+                                 form: { onsubmit: "return confirm('¿Eliminar #{product.name}?')" } %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 <% else %>
-  <div class="empty-state-widget">
-    <h3 class="empty-state-title">No hay productos registrados</h3>
+  <div class="card">
+    <div class="card-body">
+      <div class="empty-state">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+        <h3>Sin productos registrados</h3>
+        <p>Comienza agregando tu primer producto al inventario</p>
+        <%= link_to "Crear Primer Producto", new_product_path, class: "btn btn-primary", style: "margin-top: 1rem;" %>
+      </div>
+    </div>
   </div>
 <% end %>
+
+<script>
+function numberWithDelimiter(number) {
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+</script>

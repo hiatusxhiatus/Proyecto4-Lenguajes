@@ -1,147 +1,155 @@
-<!-- app/views/invoices/show.html.erb -->
-<div class="page-header-widget">
-  <div class="page-header-content">
+<div class="page-header">
+  <div>
     <h1 class="page-title">
-      Factura #<%= @invoice.invoice_number %>
-      <span class="badge badge-<%= @invoice.finalized? ? 'success' : 'warning' %>">
-        <%= @invoice.finalized? ? 'Finalizada' : 'Borrador' %>
+      🧾 Factura #<%= @invoice.invoice_number %>
+      <span class="badge badge-<%= @invoice.finalized? ? 'success' : 'warning' %>" style="margin-left: 1rem;">
+        <%= @invoice.finalized? ? '✅ Finalizada' : '📝 Borrador' %>
       </span>
     </h1>
-    <div class="page-header-actions">
-      <% if @invoice.items.any? %>
-        <%= link_to "Descargar PDF", download_pdf_invoice_path(@invoice), class: "btn btn-success" %>
-      <% end %>
-      <% if @invoice.can_be_edited? %>
-        <%= link_to "Editar", edit_invoice_path(@invoice), class: "btn btn-primary" %>
-      <% else %>
-        <span class="btn btn-secondary disabled" title="No se puede editar una factura finalizada">
-          Editar
-        </span>
-      <% end %>
-      <%= link_to "Volver", invoices_path, class: "btn btn-secondary" %>
-    </div>
+    <p style="color: var(--text-muted); margin-top: 0.5rem;">
+      Cliente: <%= @invoice.client_name %> • 
+      <%= @invoice.created_at ? Date.parse(@invoice.created_at).strftime('%d/%m/%Y') : 'Sin fecha' %>
+    </p>
+  </div>
+  <div class="page-actions">
+    <% if @invoice.items.any? %>
+      <%= link_to "📄 Descargar PDF", download_pdf_invoice_path(@invoice), class: "btn btn-success" %>
+    <% end %>
+    <% if @invoice.can_be_edited? %>
+      <%= link_to "✏️ Editar", edit_invoice_path(@invoice), class: "btn btn-primary" %>
+    <% else %>
+      <span class="btn disabled" title="No se puede editar una factura finalizada">✏️ Editar</span>
+    <% end %>
+    <%= link_to "↩️ Volver", invoices_path, class: "btn btn-secondary" %>
   </div>
 </div>
 
 <% if @invoice.finalized? %>
-  <div class="alert alert-info">
-    <div class="alert-content">
-      <strong>Factura Finalizada</strong>
-      Esta factura ha sido finalizada y no puede ser modificada. El stock ya ha sido descontado.
-    </div>
+  <div class="alert alert-success" style="margin-bottom: 2rem;">
+    <strong>✅ Factura Finalizada</strong><br>
+    Esta factura está bloqueada y el stock ha sido descontado automáticamente.
   </div>
 <% end %>
 
-<div class="row row-equal">
-  <div class="card-widget">
-    <div class="card-header">
-      <h3 class="card-title">Información del Cliente</h3>
-    </div>
-    <div class="card-body">
-      <p><strong>Cliente:</strong> <%= @invoice.client_name %></p>
-      <p><strong>Email:</strong> <%= @invoice.client_email.present? ? @invoice.client_email : 'No especificado' %></p>
-      <p><strong>Fecha:</strong> <%= @invoice.created_at ? Date.parse(@invoice.created_at).strftime('%d/%m/%Y') : 'N/A' %></p>
-      <p><strong>Número de Factura:</strong> #<%= @invoice.invoice_number %></p>
-      <p><strong>Estado:</strong> 
-        <span class="badge badge-<%= @invoice.finalized? ? 'success' : 'warning' %>">
-          <%= @invoice.finalized? ? 'Finalizada' : 'Borrador' %>
-        </span>
-      </p>
-    </div>
+<div class="stats-grid" style="margin-bottom: 2rem;">
+  <div class="stat-card">
+    <div class="stat-value"><%= @invoice.total_items_count %></div>
+    <div class="stat-label">Productos</div>
   </div>
-  
-  <div class="card-widget">
-    <div class="card-header">
-      <h3 class="card-title">Resumen de Factura</h3>
-    </div>
-    <div class="card-body">
-      <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #3498db;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-          <span>Productos:</span>
-          <strong><%= @invoice.total_items_count %> unidades</strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-          <span>Subtotal:</span>
-          <strong>₡<%= sprintf('%.2f', @invoice.subtotal) %></strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-          <span>Total Impuestos:</span>
-          <strong>₡<%= sprintf('%.2f', @invoice.tax_total) %></strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold; padding-top: 1rem; border-top: 2px solid #dee2e6;">
-          <span>TOTAL:</span>
-          <strong>₡<%= sprintf('%.2f', @invoice.total) %></strong>
-        </div>
-      </div>
-      
-      <% if @invoice.can_be_finalized? %>
-        <div style="margin-top: 1rem;">
-          <%= button_to "Finalizar Factura", finalize_invoice_path(@invoice), 
-                       method: :post, 
-                       class: "btn btn-success",
-                       form: { onsubmit: "return confirm('¿Finalizar factura y descontar stock? Esta acción no se puede deshacer.')" } %>
-          <small style="display: block; margin-top: 0.5rem; color: #6c757d;">
-            Una vez finalizada, la factura no podrá ser editada
-          </small>
-        </div>
-      <% elsif @invoice.finalized? %>
-        <div style="margin-top: 1rem; padding: 0.75rem; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724;">
-          <strong>✓ Factura Finalizada</strong><br>
-          Stock descontado automáticamente
-        </div>
-      <% end %>
-    </div>
+  <div class="stat-card">
+    <div class="stat-value currency">₡<%= number_with_delimiter(@invoice.subtotal, delimiter: ",") %></div>
+    <div class="stat-label">Subtotal</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value currency">₡<%= number_with_delimiter(@invoice.tax_total, delimiter: ",") %></div>
+    <div class="stat-label">Impuestos</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value currency" style="font-size: 2.5rem;">₡<%= number_with_delimiter(@invoice.total, delimiter: ",") %></div>
+    <div class="stat-label">Total Final</div>
   </div>
 </div>
 
-<!-- Resumen de Impuestos -->
-<% if @invoice.items.any? %>
-  <div class="card-widget">
-    <div class="card-header">
-      <h3 class="card-title">Desglose de Impuestos</h3>
-    </div>
-    <div class="card-body">
-      <div class="table-widget">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Tipo de Impuesto</th>
-              <th>Porcentaje</th>
-              <th>Base Gravable</th>
-              <th>Monto del Impuesto</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @invoice.tax_summary.each do |tax_info| %>
-              <tr>
-                <td><%= tax_info[:name] %></td>
-                <td><%= tax_info[:percentage] %>%</td>
-                <td>₡<%= sprintf('%.2f', tax_info[:base_amount]) %></td>
-                <td><strong>₡<%= sprintf('%.2f', tax_info[:tax_amount]) %></strong></td>
-              </tr>
-            <% end %>
-          </tbody>
-          <tfoot>
-            <tr style="background-color: #f8f9fa; font-weight: bold;">
-              <td colspan="2">TOTALES</td>
-              <td>₡<%= sprintf('%.2f', @invoice.subtotal) %></td>
-              <td>₡<%= sprintf('%.2f', @invoice.tax_total) %></td>
-            </tr>
-          </tfoot>
-        </table>
+<div class="grid grid-cols-2">
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">👤 Información del Cliente</h3>
+      </div>
+      <div class="card-body">
+        <div style="display: grid; gap: 1rem;">
+          <div>
+            <strong style="color: var(--text-primary);">Cliente:</strong>
+            <div style="color: var(--text-secondary); margin-top: 0.25rem;"><%= @invoice.client_name %></div>
+          </div>
+          
+          <div>
+            <strong style="color: var(--text-primary);">Email:</strong>
+            <div style="color: var(--text-secondary); margin-top: 0.25rem;">
+              <%= @invoice.client_email.present? ? @invoice.client_email : 'No especificado' %>
+            </div>
+          </div>
+          
+          <div>
+            <strong style="color: var(--text-primary);">Fecha de Emisión:</strong>
+            <div style="color: var(--text-secondary); margin-top: 0.25rem;">
+              <%= @invoice.created_at ? Date.parse(@invoice.created_at).strftime('%d de %B de %Y') : 'N/A' %>
+            </div>
+          </div>
+          
+          <div>
+            <strong style="color: var(--text-primary);">Estado:</strong>
+            <div style="margin-top: 0.25rem;">
+              <span class="badge badge-<%= @invoice.finalized? ? 'success' : 'warning' %>">
+                <%= @invoice.finalized? ? '✅ Finalizada' : '📝 Borrador' %>
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+    
+    <% if @invoice.can_be_finalized? %>
+      <div class="card" style="border-color: var(--success);">
+        <div class="card-header" style="background: rgba(16, 185, 129, 0.1);">
+          <h3 class="card-title" style="color: var(--success);">🎯 Finalizar Factura</h3>
+        </div>
+        <div class="card-body">
+          <p style="margin-bottom: 1rem; color: var(--text-secondary);">
+            Al finalizar la factura se descontará automáticamente el stock de los productos. 
+            <strong>Esta acción no se puede deshacer.</strong>
+          </p>
+          <%= button_to "✅ Finalizar Factura", finalize_invoice_path(@invoice), 
+                       method: :post, 
+                       class: "btn btn-success",
+                       style: "width: 100%;",
+                       form: { onsubmit: "return confirm('¿Confirmas finalizar la factura ##{@invoice.invoice_number}? El stock se descontará automáticamente.')" } %>
+        </div>
+      </div>
+    <% elsif @invoice.finalized? %>
+      <div class="card" style="border-color: var(--success);">
+        <div class="card-body" style="text-align: center; background: rgba(16, 185, 129, 0.05);">
+          <div style="font-size: 3rem; margin-bottom: 0.5rem;">✅</div>
+          <h4 style="color: var(--success); margin-bottom: 0.5rem;">Factura Procesada</h4>
+          <p style="color: var(--text-secondary); margin: 0;">Stock descontado automáticamente</p>
+        </div>
+      </div>
+    <% end %>
   </div>
-<% end %>
-
-<!-- Detalle de Productos -->
-<div class="card-widget">
-  <div class="card-header">
-    <h3 class="card-title">Detalle de Productos</h3>
-  </div>
-  <div class="card-body">
+  
+  <div>
     <% if @invoice.items.any? %>
-      <div class="table-widget">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">📊 Desglose de Impuestos</h3>
+        </div>
+        <div class="card-body">
+          <div style="display: grid; gap: 1rem;">
+            <% @invoice.tax_summary.each do |tax_info| %>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-tertiary); border-radius: 0.5rem;">
+                <div>
+                  <div style="font-weight: 600; color: var(--text-primary);"><%= tax_info[:name] %></div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);"><%= tax_info[:percentage] %>% sobre ₡<%= number_with_delimiter(tax_info[:base_amount], delimiter: ",") %></div>
+                </div>
+                <div style="text-align: right;">
+                  <div class="currency" style="font-weight: 700;">₡<%= number_with_delimiter(tax_info[:tax_amount], delimiter: ",") %></div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<% if @invoice.items.any? %>
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">🛒 Detalle de Productos</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-container">
         <table class="table">
           <thead>
             <tr>
@@ -150,7 +158,6 @@
               <th>Precio Unit.</th>
               <th>Subtotal</th>
               <th>Impuesto</th>
-              <th>Monto Impuesto</th>
               <th>Total Línea</th>
             </tr>
           </thead>
@@ -162,78 +169,55 @@
                 line_total = line_subtotal + line_tax
               %>
               <tr>
-                <td><%= item['product_name'] %></td>
-                <td><%= item['quantity'] %></td>
-                <td>₡<%= sprintf('%.2f', item['unit_price'].to_f) %></td>
-                <td>₡<%= sprintf('%.2f', line_subtotal) %></td>
-                <td><%= item['tax_rate_name'] %> (<%= item['tax_percentage'] %>%)</td>
-                <td>₡<%= sprintf('%.2f', line_tax) %></td>
-                <td><strong>₡<%= sprintf('%.2f', line_total) %></strong></td>
+                <td>
+                  <div style="font-weight: 600; color: var(--text-primary);"><%= item['product_name'] %></div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">ID: <%= item['product_id'] %></div>
+                </td>
+                <td style="font-weight: 600; font-size: 1.1rem;"><%= item['quantity'] %></td>
+                <td>
+                  <span class="currency">₡<%= number_with_delimiter(item['unit_price'].to_f, delimiter: ",") %></span>
+                </td>
+                <td>
+                  <span class="currency">₡<%= number_with_delimiter(line_subtotal, delimiter: ",") %></span>
+                </td>
+                <td>
+                  <div style="font-weight: 600; color: var(--text-primary);"><%= item['tax_rate_name'] %></div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    <%= item['tax_percentage'] %>% = ₡<%= number_with_delimiter(line_tax, delimiter: ",") %>
+                  </div>
+                </td>
+                <td>
+                  <span class="currency" style="font-weight: 700; font-size: 1.1rem;">
+                    ₡<%= number_with_delimiter(line_total, delimiter: ",") %>
+                  </span>
+                </td>
               </tr>
             <% end %>
           </tbody>
           <tfoot>
-            <tr style="background-color: #f8f9fa; font-weight: bold;">
-              <td colspan="2">TOTALES</td>
+            <tr style="background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%); font-weight: 700;">
+              <td colspan="2"><strong>TOTALES</strong></td>
               <td>-</td>
-              <td>₡<%= sprintf('%.2f', @invoice.subtotal) %></td>
-              <td>-</td>
-              <td>₡<%= sprintf('%.2f', @invoice.tax_total) %></td>
-              <td>₡<%= sprintf('%.2f', @invoice.total) %></td>
+              <td><span class="currency">₡<%= number_with_delimiter(@invoice.subtotal, delimiter: ",") %></span></td>
+              <td><span class="currency">₡<%= number_with_delimiter(@invoice.tax_total, delimiter: ",") %></span></td>
+              <td><span class="currency" style="font-size: 1.2rem;">₡<%= number_with_delimiter(@invoice.total, delimiter: ",") %></span></td>
             </tr>
           </tfoot>
         </table>
       </div>
-    <% else %>
-      <div class="empty-state-widget">
-        <h4>Factura vacía</h4>
+    </div>
+  </div>
+<% else %>
+  <div class="card">
+    <div class="card-body">
+      <div class="empty-state">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+        <h3>Factura Vacía</h3>
         <p>Esta factura no tiene productos asociados</p>
         <% if @invoice.can_be_edited? %>
-          <%= link_to "Agregar productos", edit_invoice_path(@invoice), class: "btn btn-primary" %>
+          <%= link_to "Agregar Productos", edit_invoice_path(@invoice), class: "btn btn-primary", style: "margin-top: 1rem;" %>
         <% end %>
       </div>
-    <% end %>
+    </div>
   </div>
-</div>
-
-<style>
-.badge {
-  padding: 0.25em 0.6em;
-  font-size: 0.75em;
-  font-weight: 700;
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: 0.375rem;
-}
-
-.badge-success {
-  color: #fff;
-  background-color: #198754;
-}
-
-.badge-warning {
-  color: #000;
-  background-color: #ffc107;
-}
-
-.table tfoot tr {
-  border-top: 2px solid #dee2e6;
-}
-
-.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.alert-info {
-  color: #055160;
-  background-color: #cff4fc;
-  border: 1px solid #b6effb;
-  border-radius: 0.375rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-</style>
+<% end %>

@@ -1,125 +1,141 @@
-<!-- app/views/invoices/index.html.erb -->
-<div class="page-header-widget">
-  <div class="page-header-content">
-    <h1 class="page-title">Sistema de Facturación</h1>
-    <div class="page-header-actions">
-      <%= link_to "Nueva Factura", new_invoice_path, class: "btn btn-primary" %>
-    </div>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">🧾 Facturación</h1>
+    <p style="color: var(--text-muted); margin-top: 0.5rem;">Administra las ventas y documentos fiscales</p>
+  </div>
+  <div class="page-actions">
+    <%= link_to "Nueva Factura", new_invoice_path, class: "btn btn-primary" %>
   </div>
 </div>
 
 <% if @invoices.any? %>
-  <div class="table-widget">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Número</th>
-          <th>Cliente</th>
-          <th>Fecha</th>
-          <th>Estado</th>
-          <th>Subtotal</th>
-          <th>Impuestos</th>
-          <th>Total</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @invoices.each do |invoice| %>
-          <tr class="<%= 'invoice-finalized' if invoice.finalized? %>">
-            <td><strong>#<%= invoice.invoice_number %></strong></td>
-            <td><%= invoice.client_name %></td>
-            <td><%= invoice.created_at ? Date.parse(invoice.created_at).strftime('%d/%m/%Y') : 'N/A' %></td>
-            <td>
-              <span class="badge badge-<%= invoice.finalized? ? 'success' : 'warning' %>">
-                <%= invoice.finalized? ? 'Finalizada' : 'Borrador' %>
-              </span>
-            </td>
-            <td>₡<%= sprintf('%.2f', invoice.subtotal) %></td>
-            <td>₡<%= sprintf('%.2f', invoice.tax_total) %></td>
-            <td><strong>₡<%= sprintf('%.2f', invoice.total) %></strong></td>
-            <td>
-              <%= link_to "Ver", invoice_path(invoice), class: "btn btn-primary btn-small" %>
-              
-              <% if invoice.can_be_edited? %>
-                <%= link_to "Editar", edit_invoice_path(invoice), class: "btn btn-secondary btn-small" %>
-              <% else %>
-                <span class="btn btn-secondary btn-small disabled" title="No se puede editar una factura finalizada">
-                  Editar
-                </span>
-              <% end %>
-              
-              <% if invoice.items.any? %>
-                <%= link_to "PDF", download_pdf_invoice_path(invoice), class: "btn btn-success btn-small" %>
-              <% end %>
-              
-              <% if invoice.can_be_edited? %>
-                <%= button_to "Eliminar", invoice_path(invoice), 
-                             method: :delete,
-                             class: "btn btn-danger btn-small",
-                             form: { onsubmit: "return confirm('¿Estás seguro?')" } %>
-              <% else %>
-                <span class="btn btn-danger btn-small disabled" title="No se puede eliminar una factura finalizada">
-                  Eliminar
-                </span>
-              <% end %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+  <% 
+    total_ventas = @invoices.sum(&:total)
+    total_impuestos = @invoices.sum(&:tax_total)
+    facturas_finalizadas = @invoices.count(&:finalized?)
+    facturas_borrador = @invoices.count(&:draft?)
+  %>
   
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value"><%= @invoices.count %></div>
+      <div class="stat-label">Facturas Totales</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value currency">₡<%= number_with_delimiter(total_ventas, delimiter: ",") %></div>
+      <div class="stat-label">Ventas Totales</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value currency">₡<%= number_with_delimiter(total_impuestos, delimiter: ",") %></div>
+      <div class="stat-label">Impuestos Recaudados</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color: var(--success);"><%= facturas_finalizadas %></div>
+      <div class="stat-label">Facturas Finalizadas</div>
+    </div>
+  </div>
+
+  <div class="card fade-in">
+    <div class="card-header">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="card-title">Registro de Facturas</h3>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <span class="badge badge-warning">📝 <%= facturas_borrador %> Borradores</span>
+          <span class="badge badge-success">✅ <%= facturas_finalizadas %> Finalizadas</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Factura</th>
+              <th>Cliente</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Total</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @invoices.each do |invoice| %>
+              <tr style="<%= 'background: rgba(16, 185, 129, 0.05);' if invoice.finalized? %>">
+                <td>
+                  <div style="font-weight: 700; color: var(--text-primary); font-family: 'Courier New', monospace;">
+                    #<%= invoice.invoice_number %>
+                  </div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    <%= pluralize(invoice.total_items_count, 'producto') %>
+                  </div>
+                </td>
+                <td>
+                  <div style="font-weight: 600; color: var(--text-primary);"><%= invoice.client_name %></div>
+                  <% if invoice.client_email.present? %>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);"><%= invoice.client_email %></div>
+                  <% end %>
+                </td>
+                <td>
+                  <div style="color: var(--text-secondary);">
+                    <%= invoice.created_at ? Date.parse(invoice.created_at).strftime('%d/%m/%Y') : 'N/A' %>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge-<%= invoice.finalized? ? 'success' : 'warning' %>">
+                    <%= invoice.finalized? ? '✅ Finalizada' : '📝 Borrador' %>
+                  </span>
+                </td>
+                <td>
+                  <div style="text-align: right;">
+                    <div class="currency" style="font-size: 1.1rem; font-weight: 700;">
+                      ₡<%= number_with_delimiter(invoice.total, delimiter: ",") %>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                      +₡<%= number_with_delimiter(invoice.tax_total, delimiter: ",") %> impuestos
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <%= link_to "👁", invoice_path(invoice), class: "btn btn-sm btn-secondary", title: "Ver factura" %>
+                    
+                    <% if invoice.can_be_edited? %>
+                      <%= link_to "✏️", edit_invoice_path(invoice), class: "btn btn-sm btn-secondary", title: "Editar" %>
+                    <% else %>
+                      <span class="btn btn-sm disabled" title="No editable">✏️</span>
+                    <% end %>
+                    
+                    <% if invoice.items.any? %>
+                      <%= link_to "📄", download_pdf_invoice_path(invoice), class: "btn btn-sm btn-success", title: "Descargar PDF" %>
+                    <% end %>
+                    
+                    <% if invoice.can_be_edited? %>
+                      <%= button_to "🗑", invoice_path(invoice), 
+                                   method: :delete,
+                                   class: "btn btn-sm btn-danger",
+                                   title: "Eliminar",
+                                   form: { onsubmit: "return confirm('¿Eliminar factura ##{invoice.invoice_number}?')" } %>
+                    <% else %>
+                      <span class="btn btn-sm disabled" title="No se puede eliminar">🗑</span>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 <% else %>
-  <div class="empty-state-widget">
-    <h3 class="empty-state-title">No hay facturas registradas</h3>
-    <p>Comienza creando tu primera factura para gestionar las ventas</p>
-    <%= link_to "Crear primera factura", new_invoice_path, class: "btn btn-primary" %>
+  <div class="card">
+    <div class="card-body">
+      <div class="empty-state">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🧾</div>
+        <h3>Sin facturas registradas</h3>
+        <p>Comienza creando tu primera factura para gestionar ventas</p>
+        <%= link_to "Crear Primera Factura", new_invoice_path, class: "btn btn-primary", style: "margin-top: 1rem;" %>
+      </div>
+    </div>
   </div>
 <% end %>
-
-<style>
-.badge {
-  padding: 0.25em 0.6em;
-  font-size: 0.75em;
-  font-weight: 700;
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: 0.375rem;
-}
-
-.badge-success {
-  color: #fff;
-  background-color: #198754;
-}
-
-.badge-warning {
-  color: #000;
-  background-color: #ffc107;
-}
-
-.btn-small {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-  margin-right: 0.25rem;
-}
-
-.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.invoice-finalized {
-  background-color: #f8f9fa;
-}
-
-.invoice-finalized td {
-  color: #6c757d;
-}
-
-.invoice-finalized td strong {
-  color: #495057;
-}
-</style>

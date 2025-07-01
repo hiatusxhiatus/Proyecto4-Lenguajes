@@ -1,46 +1,133 @@
-<!-- app/views/tax_rates/index.html.erb -->
-<div class="page-header-widget">
-  <div class="page-header-content">
-    <h1 class="page-title">Configuración de Tasas de Impuesto</h1>
-    <div class="page-header-actions">
-      <%= link_to "Nueva Tasa", new_tax_rate_path, class: "btn btn-primary" %>
-    </div>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">📊 Tasas de Impuesto</h1>
+    <p style="color: var(--text-muted); margin-top: 0.5rem;">Configura los diferentes tipos de impuestos para tus productos</p>
+  </div>
+  <div class="page-actions">
+    <%= link_to "Nueva Tasa", new_tax_rate_path, class: "btn btn-primary" %>
   </div>
 </div>
 
 <% if @tax_rates.any? %>
-  <div class="table-widget">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Porcentaje</th>
-          <th>Fecha de Creación</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @tax_rates.each do |tax_rate| %>
-          <tr>
-            <td><%= tax_rate.id %></td>
-            <td><%= tax_rate.name %></td>
-            <td><%= tax_rate.percentage %>%</td>
-            <td><%= tax_rate.created_at ? Date.parse(tax_rate.created_at).strftime('%d/%m/%Y') : 'N/A' %></td>
-            <td>
-              <%= link_to "Editar", edit_tax_rate_path(tax_rate), class: "btn btn-secondary btn-small" %>
-              <%= button_to "Eliminar", tax_rate_path(tax_rate), 
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value"><%= @tax_rates.count %></div>
+      <div class="stat-label">Tasas Configuradas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @tax_rates.maximum(:percentage) || 0 %>%</div>
+      <div class="stat-label">Tasa Máxima</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @tax_rates.minimum(:percentage) || 0 %>%</div>
+      <div class="stat-label">Tasa Mínima</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= sprintf("%.1f", @tax_rates.sum(:percentage) / @tax_rates.count) %>%</div>
+      <div class="stat-label">Promedio</div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3">
+    <% @tax_rates.each do |tax_rate| %>
+      <div class="card fade-in" style="border-left: 4px solid var(--<%= tax_rate.percentage == 0 ? 'success' : 'accent' %>);">
+        <div class="card-header" style="padding-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+              <h3 class="card-title" style="margin-bottom: 0.5rem;"><%= tax_rate.name %></h3>
+              <div style="font-size: 2rem; font-weight: 700; color: var(--<%= tax_rate.percentage == 0 ? 'success' : 'accent' %>);">
+                <%= tax_rate.percentage %>%
+              </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <%= link_to "✏️", edit_tax_rate_path(tax_rate), class: "btn btn-sm btn-secondary", title: "Editar" %>
+              <%= button_to "🗑", tax_rate_path(tax_rate), 
                            method: :delete,
-                           class: "btn btn-danger btn-small",
-                           form: { onsubmit: "return confirm('¿Estás seguro?')" } %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+                           class: "btn btn-sm btn-danger",
+                           title: "Eliminar",
+                           form: { onsubmit: "return confirm('¿Eliminar la tasa #{tax_rate.name}?')" } %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body" style="padding-top: 0;">
+          <div style="display: grid; gap: 0.75rem; font-size: 0.875rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">ID:</span>
+              <span style="color: var(--text-secondary); font-family: monospace;"><%= tax_rate.id %></span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Creada:</span>
+              <span style="color: var(--text-secondary);">
+                <%= tax_rate.created_at ? Date.parse(tax_rate.created_at).strftime('%d/%m/%Y') : 'N/A' %>
+              </span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Tipo:</span>
+              <span class="badge badge-<%= tax_rate.percentage == 0 ? 'success' : (tax_rate.percentage > 10 ? 'warning' : 'primary') %>">
+                <%= tax_rate.percentage == 0 ? 'Exento' : (tax_rate.percentage > 10 ? 'Alto' : 'Normal') %>
+              </span>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+            
+            <div style="text-align: center; padding: 0.5rem; background: var(--bg-tertiary); border-radius: 0.5rem;">
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+                Ejemplo: ₡1,000
+              </div>
+              <div style="font-weight: 600; color: var(--text-primary);">
+                + ₡<%= (1000 * tax_rate.percentage / 100).round %> = ₡<%= (1000 * (1 + tax_rate.percentage / 100)).round %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
   </div>
 <% else %>
-  <div class="empty-state-widget">
-    <h3 class="empty-state-title">No hay tasas de impuesto configuradas</h3>
+  <div class="card">
+    <div class="card-body">
+      <div class="empty-state">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+        <h3>Sin tasas configuradas</h3>
+        <p>Configure al menos una tasa de impuesto para poder crear facturas</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+          <%= link_to "IVA (13%)", new_tax_rate_path(tax_rate: {name: "IVA", percentage: 13}), class: "btn btn-primary" %>
+          <%= link_to "Exento (0%)", new_tax_rate_path(tax_rate: {name: "Exento", percentage: 0}), class: "btn btn-secondary" %>
+          <%= link_to "Custom", new_tax_rate_path, class: "btn btn-secondary" %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<% if @tax_rates.any? %>
+  <div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+      <h3 class="card-title">📋 Referencia Rápida</h3>
+    </div>
+    <div class="card-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div style="padding: 1rem; background: var(--bg-tertiary); border-radius: 0.5rem;">
+          <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">🇨🇷 Costa Rica</h4>
+          <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary);">
+            <li>IVA General: 13%</li>
+            <li>Servicios Profesionales: 4%</li>
+            <li>Productos Exentos: 0%</li>
+          </ul>
+        </div>
+        
+        <div style="padding: 1rem; background: var(--bg-tertiary); border-radius: 0.5rem;">
+          <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">💡 Consejos</h4>
+          <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+            <li>Use nombres descriptivos</li>
+            <li>Configure todas las tasas antes de crear facturas</li>
+            <li>No elimine tasas usadas en facturas</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
 <% end %>
