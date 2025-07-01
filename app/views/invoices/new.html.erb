@@ -8,33 +8,473 @@
   </div>
 </div>
 
-<div class="form-widget">
-  <div class="card-widget">
-    <div class="card-header">
-      <h3 class="card-title">Información del Cliente</h3>
+<div class="row row-2">
+  <div>
+    <!-- Información del Cliente -->
+    <div class="card-widget">
+      <div class="card-header">
+        <h3 class="card-title">Información del Cliente</h3>
+      </div>
+      <div class="card-body">
+        <%= form_with model: @invoice, local: true, id: "invoice-form", class: "form-component" do |form| %>
+          <div class="form-fields">
+            <div class="form-row">
+              <div class="form-group">
+                <%= form.label :client_name, "Nombre del Cliente", class: "form-label" %>
+                <%= form.text_field :client_name, class: "form-control", placeholder: "Nombre completo del cliente", required: true %>
+              </div>
+              
+              <div class="form-group">
+                <%= form.label :client_email, "Email del Cliente", class: "form-label" %>
+                <%= form.email_field :client_email, class: "form-control", placeholder: "cliente@ejemplo.com" %>
+                <small class="form-hint">Opcional - Para envío de factura por correo</small>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
     </div>
-    <div class="card-body">
-      <%= form_with model: @invoice, local: true, class: "form-component" do |form| %>
-        <div class="form-fields">
-          <div class="form-row">
-            <div class="form-group">
-              <%= form.label :client_name, "Nombre del Cliente", class: "form-label" %>
-              <%= form.text_field :client_name, class: "form-control", placeholder: "Nombre completo del cliente", required: true %>
-            </div>
-            
-            <div class="form-group">
-              <%= form.label :client_email, "Email del Cliente", class: "form-label" %>
-              <%= form.email_field :client_email, class: "form-control", placeholder: "cliente@ejemplo.com" %>
-              <small class="form-hint">Opcional - Para envío de factura por correo</small>
-            </div>
+
+    <!-- Lista de Productos en Factura -->
+    <div class="card-widget">
+      <div class="card-header">
+        <h3 class="card-title">Productos en la Factura</h3>
+      </div>
+      <div class="card-body">
+        <div id="invoice-items">
+          <!-- Los productos se agregarán aquí dinámicamente -->
+          <div class="empty-state-widget" id="empty-state">
+            <h4>No hay productos agregados</h4>
+            <p>Usa el panel de la derecha para agregar productos a la factura</p>
           </div>
         </div>
         
-        <div class="form-actions">
-          <%= form.submit "Crear Factura", class: "btn btn-primary" %>
-          <%= link_to "Cancelar", invoices_path, class: "btn btn-secondary" %>
+        <!-- Resumen de totales -->
+        <div id="totals-summary" style="display: none; background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #3498db; margin-top: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Subtotal:</span>
+            <strong id="subtotal-amount">₡0.00</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Total Impuestos:</span>
+            <strong id="tax-amount">₡0.00</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold; padding-top: 1rem; border-top: 2px solid #dee2e6;">
+            <span>TOTAL:</span>
+            <strong id="total-amount">₡0.00</strong>
+          </div>
         </div>
-      <% end %>
+
+        <div style="margin-top: 1.5rem;">
+          <button type="button" id="create-invoice-btn" class="btn btn-success" style="display: none;" onclick="submitInvoice()">
+            Crear Factura Completa
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div>
+    <!-- Agregar Productos -->
+    <div class="card-widget">
+      <div class="card-header">
+        <h3 class="card-title">Agregar Producto</h3>
+      </div>
+      <div class="card-body">
+        <div id="add-product-form">
+          <div class="form-group">
+            <label class="form-label">Producto</label>
+            <select id="product-select" class="form-control" required>
+              <option value="">Seleccionar producto</option>
+              <% @products.each do |product| %>
+                <option value="<%= product.id %>" data-name="<%= product.name %>" data-price="<%= product.price %>" data-stock="<%= product.stock %>">
+                  <%= product.name %> - ₡<%= sprintf('%.2f', product.price) %> (Stock: <%= product.stock %>)
+                </option>
+              <% end %>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Cantidad</label>
+            <input type="number" id="quantity-input" min="1" class="form-control" placeholder="Cantidad" required>
+            <small class="form-hint" id="stock-hint"></small>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Impuesto</label>
+            <select id="tax-rate-select" class="form-control" required>
+              <option value="">Seleccionar impuesto</option>
+              <% @tax_rates.each do |tax_rate| %>
+                <option value="<%= tax_rate.id %>" data-name="<%= tax_rate.name %>" data-percentage="<%= tax_rate.percentage %>">
+                  <%= tax_rate.name %> (<%= tax_rate.percentage %>%)
+                </option>
+              <% end %>
+            </select>
+          </div>
+          
+          <button type="button" onclick="addProductToInvoice()" class="btn btn-primary">
+            Agregar a Factura
+          </button>
+        </div>
+        
+        <% if @products.empty? %>
+          <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 4px; text-align: center;">
+            <p style="margin: 0; color: #6c757d;">No hay productos disponibles</p>
+            <%= link_to "Crear producto", new_product_path, class: "btn btn-primary", style: "margin-top: 0.5rem;" %>
+          </div>
+        <% end %>
+        
+        <% if @tax_rates.empty? %>
+          <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 4px; text-align: center;">
+            <p style="margin: 0; color: #6c757d;">No hay tasas de impuesto configuradas</p>
+            <%= link_to "Configurar tasas", new_tax_rate_path, class: "btn btn-primary", style: "margin-top: 0.5rem;" %>
+          </div>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+let invoiceItems = [];
+let itemCounter = 0;
+
+function addProductToInvoice() {
+  console.log('=== Intentando agregar producto ===');
+  
+  const productSelect = document.getElementById('product-select');
+  const quantityInput = document.getElementById('quantity-input');
+  const taxRateSelect = document.getElementById('tax-rate-select');
+  
+  console.log('Valores:', {
+    product: productSelect.value,
+    quantity: quantityInput.value,
+    tax: taxRateSelect.value
+  });
+  
+  if (!productSelect.value || !quantityInput.value || !taxRateSelect.value) {
+    alert('Por favor completa todos los campos');
+    return;
+  }
+  
+  const quantity = parseInt(quantityInput.value);
+  if (quantity <= 0) {
+    alert('La cantidad debe ser mayor a 0');
+    return;
+  }
+  
+  // Obtener datos del producto seleccionado
+  const selectedProduct = productSelect.options[productSelect.selectedIndex];
+  const productData = {
+    id: selectedProduct.value,
+    name: selectedProduct.dataset.name,
+    price: parseFloat(selectedProduct.dataset.price),
+    stock: parseInt(selectedProduct.dataset.stock)
+  };
+  
+  // Obtener datos del impuesto seleccionado
+  const selectedTaxRate = taxRateSelect.options[taxRateSelect.selectedIndex];
+  const taxData = {
+    id: selectedTaxRate.value,
+    name: selectedTaxRate.dataset.name,
+    percentage: parseFloat(selectedTaxRate.dataset.percentage)
+  };
+  
+  console.log('Datos del producto:', productData);
+  console.log('Datos del impuesto:', taxData);
+  
+  // Verificar stock disponible
+  const currentQuantityUsed = invoiceItems
+    .filter(item => item.product_id === productData.id)
+    .reduce((total, item) => total + item.quantity, 0);
+  
+  console.log('Stock usado actualmente:', currentQuantityUsed);
+  
+  if (currentQuantityUsed + quantity > productData.stock) {
+    alert(`Stock insuficiente. Disponible: ${productData.stock}, ya usado: ${currentQuantityUsed}`);
+    return;
+  }
+  
+  // Crear item de factura
+  const item = {
+    tempId: itemCounter++,
+    product_id: productData.id,
+    product_name: productData.name,
+    quantity: quantity,
+    unit_price: productData.price,
+    tax_rate_id: taxData.id,
+    tax_rate_name: taxData.name,
+    tax_percentage: taxData.percentage
+  };
+  
+  console.log('Item creado:', item);
+  
+  invoiceItems.push(item);
+  console.log('Items totales:', invoiceItems);
+  
+  updateInvoiceDisplay();
+  clearForm();
+  
+  console.log('=== Producto agregado exitosamente ===');
+}
+
+function removeItem(tempId) {
+  console.log('Eliminando item con tempId:', tempId);
+  const originalLength = invoiceItems.length;
+  invoiceItems = invoiceItems.filter(item => item.tempId !== tempId);
+  console.log(`Items eliminados: ${originalLength - invoiceItems.length}`);
+  updateInvoiceDisplay();
+}
+
+function updateInvoiceDisplay() {
+  console.log('=== Actualizando display ===');
+  console.log('Items a mostrar:', invoiceItems);
+  
+  const container = document.getElementById('invoice-items');
+  const emptyState = document.getElementById('empty-state');
+  const totalsSection = document.getElementById('totals-summary');
+  const createBtn = document.getElementById('create-invoice-btn');
+  
+  if (!container) {
+    console.error('No se encontró el contenedor invoice-items');
+    return;
+  }
+  
+  if (invoiceItems.length === 0) {
+    console.log('No hay items, mostrando estado vacío');
+    if (emptyState) emptyState.style.display = 'block';
+    if (totalsSection) totalsSection.style.display = 'none';
+    if (createBtn) createBtn.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+  
+  console.log(`Mostrando ${invoiceItems.length} items`);
+  if (emptyState) emptyState.style.display = 'none';
+  if (totalsSection) totalsSection.style.display = 'block';
+  if (createBtn) createBtn.style.display = 'inline-block';
+  
+  // Generar tabla de productos
+  let html = `
+    <div class="table-widget">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio Unit.</th>
+            <th>Subtotal</th>
+            <th>Impuesto</th>
+            <th>Total</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  let subtotal = 0;
+  let totalTax = 0;
+  
+  invoiceItems.forEach((item, index) => {
+    console.log(`Procesando item ${index}:`, item);
+    
+    const lineSubtotal = item.quantity * item.unit_price;
+    const lineTax = lineSubtotal * item.tax_percentage / 100;
+    const lineTotal = lineSubtotal + lineTax;
+    
+    subtotal += lineSubtotal;
+    totalTax += lineTax;
+    
+    html += `
+      <tr>
+        <td>${item.product_name}</td>
+        <td>${item.quantity}</td>
+        <td>₡${item.unit_price.toFixed(2)}</td>
+        <td>₡${lineSubtotal.toFixed(2)}</td>
+        <td>${item.tax_rate_name} (${item.tax_percentage}%)</td>
+        <td><strong>₡${lineTotal.toFixed(2)}</strong></td>
+        <td>
+          <button type="button" onclick="removeItem(${item.tempId})" class="btn btn-danger btn-small">
+            Eliminar
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+  
+  html += '</tbody></table></div>';
+  
+  console.log('HTML generado, actualizando contenedor');
+  container.innerHTML = html;
+  
+  // Actualizar totales
+  const total = subtotal + totalTax;
+  console.log('Totales calculados:', { subtotal, totalTax, total });
+  
+  const subtotalEl = document.getElementById('subtotal-amount');
+  const taxEl = document.getElementById('tax-amount');
+  const totalEl = document.getElementById('total-amount');
+  
+  if (subtotalEl) subtotalEl.textContent = `₡${subtotal.toFixed(2)}`;
+  if (taxEl) taxEl.textContent = `₡${totalTax.toFixed(2)}`;
+  if (totalEl) totalEl.textContent = `₡${total.toFixed(2)}`;
+  
+  console.log('=== Display actualizado ===');
+}
+
+function clearForm() {
+  console.log('Limpiando formulario');
+  document.getElementById('product-select').value = '';
+  document.getElementById('quantity-input').value = '';
+  document.getElementById('tax-rate-select').value = '';
+  const stockHint = document.getElementById('stock-hint');
+  if (stockHint) stockHint.textContent = '';
+}
+
+function submitInvoice() {
+  console.log('=== Enviando factura ===');
+  
+  // Prevenir envíos múltiples
+  const createBtn = document.getElementById('create-invoice-btn');
+  if (createBtn.disabled) {
+    console.log('Ya se está procesando, ignorando...');
+    return;
+  }
+  
+  const clientName = document.querySelector('#invoice_client_name').value;
+  const clientEmail = document.querySelector('#invoice_client_email').value;
+  
+  console.log('Datos del cliente:', { clientName, clientEmail });
+  
+  if (!clientName || clientName.trim().length < 2) {
+    alert('Por favor ingresa el nombre del cliente (mínimo 2 caracteres)');
+    return;
+  }
+  
+  if (invoiceItems.length === 0) {
+    alert('Agrega al menos un producto a la factura');
+    return;
+  }
+  
+  console.log('Enviando factura con items:', invoiceItems);
+  
+  // Deshabilitar el botón para prevenir envíos múltiples
+  createBtn.disabled = true;
+  createBtn.textContent = 'Creando...';
+  
+  // Crear campos ocultos para los items
+  const form = document.getElementById('invoice-form');
+  
+  if (!form) {
+    console.error('No se encontró el formulario');
+    createBtn.disabled = false;
+    createBtn.textContent = 'Crear Factura Completa';
+    return;
+  }
+  
+  // Limpiar campos de items anteriores
+  const existingItems = form.querySelectorAll('[name^="invoice[items]"]');
+  console.log(`Eliminando ${existingItems.length} campos existentes`);
+  existingItems.forEach(input => input.remove());
+  
+  // Agregar items como campos ocultos
+  invoiceItems.forEach((item, index) => {
+    const fields = [
+      'product_id', 'product_name', 'quantity', 'unit_price', 
+      'tax_rate_id', 'tax_rate_name', 'tax_percentage'
+    ];
+    
+    fields.forEach(field => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = `invoice[items][${index}][${field}]`;
+      input.value = item[field];
+      form.appendChild(input);
+      console.log(`Campo agregado: ${input.name} = ${input.value}`);
+    });
+  });
+  
+  console.log('Enviando formulario...');
+  
+  // Agregar event listener para reactivar el botón si hay error
+  form.addEventListener('submit', function() {
+    setTimeout(() => {
+      createBtn.disabled = false;
+      createBtn.textContent = 'Crear Factura Completa';
+    }, 3000);
+  });
+  
+  form.submit();
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM cargado, configurando event listeners');
+  
+  // Event listener para mostrar stock disponible
+  const productSelect = document.getElementById('product-select');
+  if (productSelect) {
+    productSelect.addEventListener('change', function() {
+      const stockHint = document.getElementById('stock-hint');
+      const selected = this.options[this.selectedIndex];
+      
+      if (selected && selected.value) {
+        const stock = parseInt(selected.dataset.stock);
+        const currentlyUsed = invoiceItems
+          .filter(item => item.product_id === selected.value)
+          .reduce((total, item) => total + item.quantity, 0);
+        
+        const available = stock - currentlyUsed;
+        if (stockHint) {
+          stockHint.textContent = `Stock disponible: ${available} unidades (total: ${stock})`;
+          stockHint.style.color = available < 5 ? '#e74c3c' : '#27ae60';
+        }
+      } else {
+        if (stockHint) stockHint.textContent = '';
+      }
+    });
+  }
+
+  // Event listener para validar cantidad máxima
+  const quantityInput = document.getElementById('quantity-input');
+  if (quantityInput) {
+    quantityInput.addEventListener('input', function() {
+      const productSelect = document.getElementById('product-select');
+      const selected = productSelect.options[productSelect.selectedIndex];
+      
+      if (selected && selected.value) {
+        const stock = parseInt(selected.dataset.stock);
+        const currentlyUsed = invoiceItems
+          .filter(item => item.product_id === selected.value)
+          .reduce((total, item) => total + item.quantity, 0);
+        
+        const available = stock - currentlyUsed;
+        const requestedQuantity = parseInt(this.value);
+        
+        if (requestedQuantity > available) {
+          this.value = available;
+          alert(`Cantidad ajustada. Stock disponible: ${available}`);
+        }
+      }
+    });
+  }
+});
+</script>
+
+<style>
+.table-row-warning {
+  background-color: #fff3cd;
+}
+
+.btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+</style>

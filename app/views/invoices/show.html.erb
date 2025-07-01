@@ -1,14 +1,36 @@
 <!-- app/views/invoices/show.html.erb -->
 <div class="page-header-widget">
   <div class="page-header-content">
-    <h1 class="page-title">Factura #<%= @invoice.invoice_number %></h1>
+    <h1 class="page-title">
+      Factura #<%= @invoice.invoice_number %>
+      <span class="badge badge-<%= @invoice.finalized? ? 'success' : 'warning' %>">
+        <%= @invoice.finalized? ? 'Finalizada' : 'Borrador' %>
+      </span>
+    </h1>
     <div class="page-header-actions">
-      <%= link_to "Descargar PDF", download_pdf_invoice_path(@invoice), class: "btn btn-success" %>
-      <%= link_to "Editar", edit_invoice_path(@invoice), class: "btn btn-primary" %>
+      <% if @invoice.items.any? %>
+        <%= link_to "Descargar PDF", download_pdf_invoice_path(@invoice), class: "btn btn-success" %>
+      <% end %>
+      <% if @invoice.can_be_edited? %>
+        <%= link_to "Editar", edit_invoice_path(@invoice), class: "btn btn-primary" %>
+      <% else %>
+        <span class="btn btn-secondary disabled" title="No se puede editar una factura finalizada">
+          Editar
+        </span>
+      <% end %>
       <%= link_to "Volver", invoices_path, class: "btn btn-secondary" %>
     </div>
   </div>
 </div>
+
+<% if @invoice.finalized? %>
+  <div class="alert alert-info">
+    <div class="alert-content">
+      <strong>Factura Finalizada</strong>
+      Esta factura ha sido finalizada y no puede ser modificada. El stock ya ha sido descontado.
+    </div>
+  </div>
+<% end %>
 
 <div class="row row-equal">
   <div class="card-widget">
@@ -20,6 +42,11 @@
       <p><strong>Email:</strong> <%= @invoice.client_email.present? ? @invoice.client_email : 'No especificado' %></p>
       <p><strong>Fecha:</strong> <%= @invoice.created_at ? Date.parse(@invoice.created_at).strftime('%d/%m/%Y') : 'N/A' %></p>
       <p><strong>Número de Factura:</strong> #<%= @invoice.invoice_number %></p>
+      <p><strong>Estado:</strong> 
+        <span class="badge badge-<%= @invoice.finalized? ? 'success' : 'warning' %>">
+          <%= @invoice.finalized? ? 'Finalizada' : 'Borrador' %>
+        </span>
+      </p>
     </div>
   </div>
   
@@ -31,7 +58,7 @@
       <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #3498db;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
           <span>Productos:</span>
-          <strong><%= @invoice.items.sum { |item| item['quantity'] } %> unidades</strong>
+          <strong><%= @invoice.total_items_count %> unidades</strong>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
           <span>Subtotal:</span>
@@ -46,10 +73,68 @@
           <strong>₡<%= sprintf('%.2f', @invoice.total) %></strong>
         </div>
       </div>
+      
+      <% if @invoice.can_be_finalized? %>
+        <div style="margin-top: 1rem;">
+          <%= button_to "Finalizar Factura", finalize_invoice_path(@invoice), 
+                       method: :post, 
+                       class: "btn btn-success",
+                       form: { onsubmit: "return confirm('¿Finalizar factura y descontar stock? Esta acción no se puede deshacer.')" } %>
+          <small style="display: block; margin-top: 0.5rem; color: #6c757d;">
+            Una vez finalizada, la factura no podrá ser editada
+          </small>
+        </div>
+      <% elsif @invoice.finalized? %>
+        <div style="margin-top: 1rem; padding: 0.75rem; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724;">
+          <strong>✓ Factura Finalizada</strong><br>
+          Stock descontado automáticamente
+        </div>
+      <% end %>
     </div>
   </div>
 </div>
 
+<!-- Resumen de Impuestos -->
+<% if @invoice.items.any? %>
+  <div class="card-widget">
+    <div class="card-header">
+      <h3 class="card-title">Desglose de Impuestos</h3>
+    </div>
+    <div class="card-body">
+      <div class="table-widget">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Tipo de Impuesto</th>
+              <th>Porcentaje</th>
+              <th>Base Gravable</th>
+              <th>Monto del Impuesto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @invoice.tax_summary.each do |tax_info| %>
+              <tr>
+                <td><%= tax_info[:name] %></td>
+                <td><%= tax_info[:percentage] %>%</td>
+                <td>₡<%= sprintf('%.2f', tax_info[:base_amount]) %></td>
+                <td><strong>₡<%= sprintf('%.2f', tax_info[:tax_amount]) %></strong></td>
+              </tr>
+            <% end %>
+          </tbody>
+          <tfoot>
+            <tr style="background-color: #f8f9fa; font-weight: bold;">
+              <td colspan="2">TOTALES</td>
+              <td>₡<%= sprintf('%.2f', @invoice.subtotal) %></td>
+              <td>₡<%= sprintf('%.2f', @invoice.tax_total) %></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Detalle de Productos -->
 <div class="card-widget">
   <div class="card-header">
     <h3 class="card-title">Detalle de Productos</h3>
@@ -65,28 +150,90 @@
               <th>Precio Unit.</th>
               <th>Subtotal</th>
               <th>Impuesto</th>
+              <th>Monto Impuesto</th>
               <th>Total Línea</th>
             </tr>
           </thead>
           <tbody>
             <% @invoice.items.each do |item| %>
+              <% 
+                line_subtotal = item['quantity'].to_i * item['unit_price'].to_f
+                line_tax = line_subtotal * item['tax_percentage'].to_f / 100
+                line_total = line_subtotal + line_tax
+              %>
               <tr>
                 <td><%= item['product_name'] %></td>
                 <td><%= item['quantity'] %></td>
-                <td>₡<%= sprintf('%.2f', item['unit_price']) %></td>
-                <td>₡<%= sprintf('%.2f', item['quantity'] * item['unit_price']) %></td>
+                <td>₡<%= sprintf('%.2f', item['unit_price'].to_f) %></td>
+                <td>₡<%= sprintf('%.2f', line_subtotal) %></td>
                 <td><%= item['tax_rate_name'] %> (<%= item['tax_percentage'] %>%)</td>
-                <td><strong>₡<%= sprintf('%.2f', item['quantity'] * item['unit_price'] * (1 + item['tax_percentage']/100)) %></strong></td>
+                <td>₡<%= sprintf('%.2f', line_tax) %></td>
+                <td><strong>₡<%= sprintf('%.2f', line_total) %></strong></td>
               </tr>
             <% end %>
           </tbody>
+          <tfoot>
+            <tr style="background-color: #f8f9fa; font-weight: bold;">
+              <td colspan="2">TOTALES</td>
+              <td>-</td>
+              <td>₡<%= sprintf('%.2f', @invoice.subtotal) %></td>
+              <td>-</td>
+              <td>₡<%= sprintf('%.2f', @invoice.tax_total) %></td>
+              <td>₡<%= sprintf('%.2f', @invoice.total) %></td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     <% else %>
       <div class="empty-state-widget">
         <h4>Factura vacía</h4>
         <p>Esta factura no tiene productos asociados</p>
+        <% if @invoice.can_be_edited? %>
+          <%= link_to "Agregar productos", edit_invoice_path(@invoice), class: "btn btn-primary" %>
+        <% end %>
       </div>
     <% end %>
   </div>
 </div>
+
+<style>
+.badge {
+  padding: 0.25em 0.6em;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.375rem;
+}
+
+.badge-success {
+  color: #fff;
+  background-color: #198754;
+}
+
+.badge-warning {
+  color: #000;
+  background-color: #ffc107;
+}
+
+.table tfoot tr {
+  border-top: 2px solid #dee2e6;
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.alert-info {
+  color: #055160;
+  background-color: #cff4fc;
+  border: 1px solid #b6effb;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+</style>
