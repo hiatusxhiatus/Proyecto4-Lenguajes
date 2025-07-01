@@ -1,0 +1,102 @@
+<!-- app/views/products/show.html.erb -->
+<div class="page-header-widget">
+  <div class="page-header-content">
+    <h1 class="page-title"><%= @product.name %></h1>
+    <div class="page-header-actions">
+      <%= link_to "Editar", edit_product_path(@product), class: "btn btn-primary" %>
+      <%= link_to "Volver", products_path, class: "btn btn-secondary" %>
+    </div>
+  </div>
+</div>
+
+<div class="row row-2">
+  <div>
+    <div class="card-widget">
+      <div class="card-header">
+        <h3 class="card-title">Información del Producto</h3>
+      </div>
+      <div class="card-body">
+        <div class="info-item">
+          <strong>ID:</strong> <%= @product.id %>
+        </div>
+        <div class="info-item">
+          <strong>Precio:</strong> ₡<%= sprintf('%.2f', @product.price) %>
+        </div>
+        <div class="info-item">
+          <strong>Stock:</strong> 
+          <%= @product.stock %>
+          <span class="badge badge-<%= @product.low_stock? ? 'warning' : 'success' %>">
+            <%= @product.low_stock? ? "Stock Bajo" : "Stock Normal" %>
+          </span>
+        </div>
+        <div class="info-item">
+          <strong>Fecha de Creación:</strong> 
+          <%= @product.created_at ? Date.parse(@product.created_at).strftime('%d/%m/%Y') : 'N/A' %>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div>
+    <div class="card-widget">
+      <div class="card-header">
+        <h3 class="card-title">Entradas y Salidas de Stock</h3>
+      </div>
+      <div class="card-body">
+        <div class="stock-section">
+          <h4>Entrada de Stock</h4>
+          <%= form_with url: update_stock_product_path(@product), method: :patch, local: true do |form| %>
+            <div class="form-group">
+              <%= form.label :quantity, "Cantidad", class: "form-label" %>
+              <%= form.number_field :quantity, min: 1, class: "form-control", placeholder: "Cantidad a agregar", required: true %>
+            </div>
+            <%= form.hidden_field :operation, value: "add" %>
+            <%= form.submit "Agregar Stock", class: "btn btn-success" %>
+          <% end %>
+        </div>
+        
+        <div class="stock-section">
+          <h4>Salida de Stock</h4>
+          <%= form_with url: update_stock_product_path(@product), method: :patch, local: true do |form| %>
+            <div class="form-group">
+              <%= form.label :quantity, "Cantidad", class: "form-label" %>
+              <%= form.number_field :quantity, min: 1, max: @product.stock, class: "form-control", placeholder: "Cantidad a retirar", required: true %>
+            </div>
+            <%= form.hidden_field :operation, value: "subtract" %>
+            <%= form.submit "Retirar Stock", class: "btn btn-warning" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.info-item {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.stock-section {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.stock-section h4 {
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.stock-section:last-child {
+  margin-bottom: 0;
+}
+</style>

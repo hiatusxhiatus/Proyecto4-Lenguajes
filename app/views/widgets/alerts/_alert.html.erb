@@ -1,0 +1,22 @@
+<!-- app/views/widgets/alerts/_alert.html.erb -->
+<%
+  # Props/Inputs
+  type ||= "info"
+  message ||= ""
+  dismissible ||= true
+  title ||= nil
+  classes ||= ""
+%>
+
+<div class="alert alert-<%= type %> <%= classes %>">
+  <div class="alert-content">
+    <% if title %>
+      <strong class="alert-title"><%= title %></strong>
+    <% end %>
+    <div class="alert-message"><%= message %></div>
+  </div>
+  
+  <% if dismissible %>
+    <button class="alert-close" onclick="this.parentElement.style.display='none'">&times;</button>
+  <% end %>
+</div>

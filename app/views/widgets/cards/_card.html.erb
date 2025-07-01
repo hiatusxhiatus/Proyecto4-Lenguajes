@@ -1,0 +1,33 @@
+<!-- app/views/widgets/cards/_card.html.erb -->
+<%
+  # Props/Inputs
+  title ||= nil
+  subtitle ||= nil
+  has_header ||= title.present? || subtitle.present?
+  classes ||= ""
+  header_actions ||= nil
+%>
+
+<div class="card-widget <%= classes %>">
+  <% if has_header %>
+    <div class="card-header">
+      <div class="card-header-content">
+        <% if title %>
+          <h3 class="card-title"><%= title %></h3>
+        <% end %>
+        <% if subtitle %>
+          <p class="card-subtitle"><%= subtitle %></p>
+        <% end %>
+      </div>
+      <% if header_actions %>
+        <div class="card-header-actions">
+          <%= header_actions %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+  
+  <div class="card-body">
+    <%= yield %>
+  </div>
+</div>

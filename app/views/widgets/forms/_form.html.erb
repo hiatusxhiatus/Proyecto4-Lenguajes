@@ -1,0 +1,25 @@
+<!-- app/views/widgets/forms/_form.html.erb -->
+<%
+  # Props/Inputs
+  model ||= nil
+  title ||= nil
+  subtitle ||= nil
+  submit_text ||= "Guardar"
+  cancel_url ||= nil
+  classes ||= ""
+%>
+
+<%= render 'widgets/cards/card', title: title, subtitle: subtitle, classes: "form-widget #{classes}" do %>
+  <%= form_with model: model, local: true, class: "form-component" do |form| %>
+    <div class="form-fields">
+      <%= yield form %>
+    </div>
+    
+    <div class="form-actions">
+      <%= render 'widgets/buttons/button', text: submit_text, variant: "primary", type: "submit" %>
+      <% if cancel_url %>
+        <%= render 'widgets/buttons/button', text: "Cancelar", variant: "secondary", href: cancel_url %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

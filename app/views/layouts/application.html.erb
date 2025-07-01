@@ -1,28 +1,51 @@
+<!-- app/views/layouts/application.html.erb -->
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Facturacion System" %></title>
+    <title>Sistema de Facturación</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-
-    <%= yield :head %>
-
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
-
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app %>
-    <%= javascript_importmap_tags %>
+    
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="/assets/stylesheets/base.css">
+    <link rel="stylesheet" href="/assets/stylesheets/layout.css">
+    <link rel="stylesheet" href="/assets/stylesheets/widgets.css">
+    
+    <!-- Component Specific Styles -->
+    <% if content_for?(:component_styles) %>
+      <%= yield(:component_styles) %>
+    <% end %>
   </head>
 
   <body>
-    <%= yield %>
+    <nav class="app-nav">
+      <div class="nav-container">
+        <%= link_to "Sistema de Facturación", root_path, class: "nav-brand" %>
+        
+        <div class="nav-links">
+          <%= link_to "Productos", products_path, class: "nav-item" %>
+          <%= link_to "Tasas de Impuesto", tax_rates_path, class: "nav-item" %>
+          <%= link_to "Facturas", invoices_path, class: "nav-item" %>
+        </div>
+      </div>
+    </nav>
+
+    <main class="app-main">
+      <% if notice %>
+        <%= render 'widgets/alerts/alert', type: "success", message: notice %>
+      <% end %>
+
+      <% if alert %>
+        <%= render 'widgets/alerts/alert', type: "error", message: alert %>
+      <% end %>
+
+      <%= yield %>
+    </main>
+
+    <!-- Component Specific Scripts -->
+    <% if content_for?(:component_scripts) %>
+      <%= yield(:component_scripts) %>
+    <% end %>
   </body>
 </html>

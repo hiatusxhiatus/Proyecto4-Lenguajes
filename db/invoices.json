@@ -1,0 +1,30 @@
+[
+  {
+    "invoice_number": "000001",
+    "client_name": "Holaaa",
+    "client_email": "ejemplo@tec.ac.cr",
+    "items": [
+      {
+        "product_id": "3",
+        "product_name": "Teclado Mecánico RGB",
+        "quantity": 5,
+        "unit_price": 75000.0,
+        "tax_rate_id": "1",
+        "tax_rate_name": "IVA",
+        "tax_percentage": 13.0
+      },
+      {
+        "product_id": "5",
+        "product_name": "Auriculares Bluetooth",
+        "quantity": 2,
+        "unit_price": 25000.0,
+        "tax_rate_id": "4",
+        "tax_rate_name": "Ejemplo",
+        "tax_percentage": 100.0
+      }
+    ],
+    "id": "1",
+    "created_at": "2025-07-01 17:02:14 UTC",
+    "updated_at": "2025-07-01 17:04:55 UTC"
+  }
+]

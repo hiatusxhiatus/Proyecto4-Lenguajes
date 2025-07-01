@@ -1,0 +1,68 @@
+<!-- app/views/products/index.html.erb -->
+<div class="page-header-widget">
+  <div class="page-header-content">
+    <h1 class="page-title">Gestión de Inventario</h1>
+    <div class="page-header-actions">
+      <%= link_to "Nuevo Producto", new_product_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+</div>
+
+<% if @low_stock_products.any? %>
+  <div class="alert alert-warning">
+    <div class="alert-content">
+      <strong>¡Alerta de Stock Bajo!</strong>
+      Los siguientes productos tienen menos de 5 unidades:
+      <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+        <% @low_stock_products.each do |product| %>
+          <li><%= product.name %> (Stock: <%= product.stock %>)</li>
+        <% end %>
+      </ul>
+    </div>
+    <button class="alert-close" onclick="this.parentElement.style.display='none'">&times;</button>
+  </div>
+<% end %>
+
+<% if @products.any? %>
+  <div class="table-widget">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Precio</th>
+          <th>Stock</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @products.each do |product| %>
+          <tr class="<%= 'table-row-warning' if product.low_stock? %>">
+            <td><%= product.id %></td>
+            <td><%= product.name %></td>
+            <td>₡<%= sprintf('%.2f', product.price) %></td>
+            <td><%= product.stock %></td>
+            <td>
+              <span class="badge badge-<%= product.low_stock? ? 'warning' : 'success' %>">
+                <%= product.low_stock? ? "Stock Bajo" : "OK" %>
+              </span>
+            </td>
+            <td>
+              <%= link_to "Ver", product_path(product), class: "btn btn-primary btn-small" %>
+              <%= link_to "Editar", edit_product_path(product), class: "btn btn-secondary btn-small" %>
+              <%= button_to "Eliminar", product_path(product), 
+                           method: :delete,
+                           class: "btn btn-danger btn-small",
+                           form: { onsubmit: "return confirm('¿Estás seguro?')" } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="empty-state-widget">
+    <h3 class="empty-state-title">No hay productos registrados</h3>
+  </div>
+<% end %>

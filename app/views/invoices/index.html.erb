@@ -1,0 +1,54 @@
+<!-- app/views/invoices/index.html.erb -->
+<div class="page-header-widget">
+  <div class="page-header-content">
+    <h1 class="page-title">Sistema de Facturación</h1>
+    <div class="page-header-actions">
+      <%= link_to "Nueva Factura", new_invoice_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+</div>
+
+<% if @invoices.any? %>
+  <div class="table-widget">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Número</th>
+          <th>Cliente</th>
+          <th>Fecha</th>
+          <th>Subtotal</th>
+          <th>Impuestos</th>
+          <th>Total</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @invoices.each do |invoice| %>
+          <tr>
+            <td><strong>#<%= invoice.invoice_number %></strong></td>
+            <td><%= invoice.client_name %></td>
+            <td><%= invoice.created_at ? Date.parse(invoice.created_at).strftime('%d/%m/%Y') : 'N/A' %></td>
+            <td>₡<%= sprintf('%.2f', invoice.subtotal) %></td>
+            <td>₡<%= sprintf('%.2f', invoice.tax_total) %></td>
+            <td><strong>₡<%= sprintf('%.2f', invoice.total) %></strong></td>
+            <td>
+              <%= link_to "Ver", invoice_path(invoice), class: "btn btn-primary btn-small" %>
+              <%= link_to "Editar", edit_invoice_path(invoice), class: "btn btn-secondary btn-small" %>
+              <%= link_to "PDF", download_pdf_invoice_path(invoice), class: "btn btn-success btn-small" %>
+              <%= button_to "Eliminar", invoice_path(invoice), 
+                           method: :delete,
+                           class: "btn btn-danger btn-small",
+                           form: { onsubmit: "return confirm('¿Estás seguro?')" } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="empty-state-widget">
+    <h3 class="empty-state-title">No hay facturas registradas</h3>
+    <p>Comienza creando tu primera factura para gestionar las ventas</p>
+    <%= link_to "Crear primera factura", new_invoice_path, class: "btn btn-primary" %>
+  </div>
+<% end %>

@@ -1,0 +1,39 @@
+<!-- app/views/widgets/layout/_page_header.html.erb -->
+<%
+  # Props/Inputs
+  title ||= ""
+  subtitle ||= nil
+  actions ||= nil
+  breadcrumbs ||= []
+  classes ||= ""
+%>
+
+<div class="page-header-widget <%= classes %>">
+  <% if breadcrumbs.any? %>
+    <nav class="breadcrumb-nav">
+      <% breadcrumbs.each_with_index do |crumb, index| %>
+        <% if index == breadcrumbs.length - 1 %>
+          <span class="breadcrumb-current"><%= crumb[:text] %></span>
+        <% else %>
+          <%= link_to crumb[:text], crumb[:url], class: "breadcrumb-link" %>
+          <span class="breadcrumb-separator">></span>
+        <% end %>
+      <% end %>
+    </nav>
+  <% end %>
+  
+  <div class="page-header-content">
+    <div class="page-header-text">
+      <h1 class="page-title"><%= title %></h1>
+      <% if subtitle %>
+        <p class="page-subtitle"><%= subtitle %></p>
+      <% end %>
+    </div>
+    
+    <% if actions %>
+      <div class="page-header-actions">
+        <%= actions %>
+      </div>
+    <% end %>
+  </div>
+</div>

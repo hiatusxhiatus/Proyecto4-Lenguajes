@@ -1,0 +1,40 @@
+<!-- app/views/widgets/buttons/_button.html.erb -->
+<%
+  # Props/Inputs como en Angular
+  text ||= "Button"
+  variant ||= "primary"
+  size ||= "normal"
+  href ||= nil
+  disabled ||= false
+  icon ||= nil
+  onclick ||= nil
+  type ||= "button"
+  classes ||= ""
+  
+  # Construir clases CSS
+  css_classes = ["btn", "btn-#{variant}"]
+  css_classes << "btn-#{size}" if size != "normal"
+  css_classes << "disabled" if disabled
+  css_classes << classes if classes.present?
+%>
+
+<% if href %>
+  <%= link_to href, class: css_classes.join(" "), data: { disabled: disabled } do %>
+    <% if icon %>
+      <i class="icon-<%= icon %>"></i>
+    <% end %>
+    <%= text %>
+  <% end %>
+<% else %>
+  <button 
+    type="<%= type %>" 
+    class="<%= css_classes.join(" ") %>"
+    <%= "disabled" if disabled %>
+    <%= "onclick=\"#{onclick}\"" if onclick %>
+  >
+    <% if icon %>
+      <i class="icon-<%= icon %>"></i>
+    <% end %>
+    <%= text %>
+  </button>
+<% end %>

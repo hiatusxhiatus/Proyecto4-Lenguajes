@@ -1,0 +1,92 @@
+<!-- app/views/invoices/show.html.erb -->
+<div class="page-header-widget">
+  <div class="page-header-content">
+    <h1 class="page-title">Factura #<%= @invoice.invoice_number %></h1>
+    <div class="page-header-actions">
+      <%= link_to "Descargar PDF", download_pdf_invoice_path(@invoice), class: "btn btn-success" %>
+      <%= link_to "Editar", edit_invoice_path(@invoice), class: "btn btn-primary" %>
+      <%= link_to "Volver", invoices_path, class: "btn btn-secondary" %>
+    </div>
+  </div>
+</div>
+
+<div class="row row-equal">
+  <div class="card-widget">
+    <div class="card-header">
+      <h3 class="card-title">Información del Cliente</h3>
+    </div>
+    <div class="card-body">
+      <p><strong>Cliente:</strong> <%= @invoice.client_name %></p>
+      <p><strong>Email:</strong> <%= @invoice.client_email.present? ? @invoice.client_email : 'No especificado' %></p>
+      <p><strong>Fecha:</strong> <%= @invoice.created_at ? Date.parse(@invoice.created_at).strftime('%d/%m/%Y') : 'N/A' %></p>
+      <p><strong>Número de Factura:</strong> #<%= @invoice.invoice_number %></p>
+    </div>
+  </div>
+  
+  <div class="card-widget">
+    <div class="card-header">
+      <h3 class="card-title">Resumen de Factura</h3>
+    </div>
+    <div class="card-body">
+      <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #3498db;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span>Productos:</span>
+          <strong><%= @invoice.items.sum { |item| item['quantity'] } %> unidades</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span>Subtotal:</span>
+          <strong>₡<%= sprintf('%.2f', @invoice.subtotal) %></strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span>Total Impuestos:</span>
+          <strong>₡<%= sprintf('%.2f', @invoice.tax_total) %></strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold; padding-top: 1rem; border-top: 2px solid #dee2e6;">
+          <span>TOTAL:</span>
+          <strong>₡<%= sprintf('%.2f', @invoice.total) %></strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card-widget">
+  <div class="card-header">
+    <h3 class="card-title">Detalle de Productos</h3>
+  </div>
+  <div class="card-body">
+    <% if @invoice.items.any? %>
+      <div class="table-widget">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Precio Unit.</th>
+              <th>Subtotal</th>
+              <th>Impuesto</th>
+              <th>Total Línea</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @invoice.items.each do |item| %>
+              <tr>
+                <td><%= item['product_name'] %></td>
+                <td><%= item['quantity'] %></td>
+                <td>₡<%= sprintf('%.2f', item['unit_price']) %></td>
+                <td>₡<%= sprintf('%.2f', item['quantity'] * item['unit_price']) %></td>
+                <td><%= item['tax_rate_name'] %> (<%= item['tax_percentage'] %>%)</td>
+                <td><strong>₡<%= sprintf('%.2f', item['quantity'] * item['unit_price'] * (1 + item['tax_percentage']/100)) %></strong></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="empty-state-widget">
+        <h4>Factura vacía</h4>
+        <p>Esta factura no tiene productos asociados</p>
+      </div>
+    <% end %>
+  </div>
+</div>

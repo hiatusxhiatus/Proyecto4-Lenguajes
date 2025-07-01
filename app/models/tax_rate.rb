@@ -1,25 +1,22 @@
-# app/models/product.rb
-class Product
+# app/models/tax_rate.rb
+class TaxRate
   include ActiveModel::Model
   include ActiveModel::Attributes
   
   attribute :id, :string
   attribute :name, :string
-  attribute :price, :float
-  attribute :stock, :integer
+  attribute :percentage, :float
   attribute :created_at, :string
   attribute :updated_at, :string
 
   validates :name, presence: true, length: { minimum: 2 }
-  validates :price, presence: true, numericality: { greater_than: 0 }
-  validates :stock, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :percentage, presence: true, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
 
   def initialize(params = {})
     super
     @id = params['id']
     @name = params['name']
-    @price = params['price'].to_f if params['price']
-    @stock = params['stock'].to_i if params['stock']
+    @percentage = params['percentage'].to_f if params['percentage']
     @created_at = params['created_at']
     @updated_at = params['updated_at']
   end
@@ -45,9 +42,9 @@ class Product
     ActiveModel::Name.new(self.class)
   end
 
-  # Métodos de clase (como "static" en otros lenguajes)
+  # Métodos de clase
   def self.store
-    @store ||= JsonStore.new('products')
+    @store ||= JsonStore.new('tax_rates')
   end
 
   def self.all
@@ -60,8 +57,8 @@ class Product
   end
 
   def self.create(params)
-    product = new(params)
-    product.save ? product : nil
+    tax_rate = new(params)
+    tax_rate.save ? tax_rate : nil
   end
 
   # Métodos de instancia
@@ -81,18 +78,8 @@ class Product
     store.delete(id) if persisted?
   end
 
-  def low_stock?
-    stock < 5
-  end
-
-  def update_stock(quantity, operation = :add)
-    if operation == :add
-      self.stock += quantity
-    else
-      self.stock -= quantity
-    end
-    self.stock = 0 if stock < 0
-    save
+  def calculate_tax(amount)
+    (amount * percentage / 100).round(2)
   end
 
   private
@@ -104,16 +91,14 @@ class Product
   def to_hash
     {
       'name' => name,
-      'price' => price,
-      'stock' => stock
+      'percentage' => percentage
     }
   end
 
   def update_attributes_from_data(data)
     @id = data['id']
     @name = data['name']
-    @price = data['price'].to_f
-    @stock = data['stock'].to_i
+    @percentage = data['percentage'].to_f
     @created_at = data['created_at']
     @updated_at = data['updated_at']
     true

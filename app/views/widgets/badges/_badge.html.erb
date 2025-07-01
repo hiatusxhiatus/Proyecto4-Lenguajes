@@ -1,0 +1,13 @@
+<!-- app/views/widgets/badges/_badge.html.erb -->
+<%
+  # Props/Inputs
+  text ||= ""
+  variant ||= "primary"
+  size ||= "normal"
+  classes ||= ""
+  pill ||= false
+%>
+
+<span class="badge badge-<%= variant %> <%= 'badge-pill' if pill %> <%= 'badge-' + size if size != 'normal' %> <%= classes %>">
+  <%= text %>
+</span>
