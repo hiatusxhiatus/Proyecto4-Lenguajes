@@ -1,50 +1,74 @@
-<!-- app/views/products/show.html.erb -->
-<div class="page-header-widget">
-  <div class="page-header-content">
+<div class="page-header">
+  <div>
     <h1 class="page-title"><%= @product.name %></h1>
-    <div class="page-header-actions">
-      <%= link_to "Editar", edit_product_path(@product), class: "btn btn-primary" %>
-      <%= link_to "Volver", products_path, class: "btn btn-secondary" %>
-    </div>
+    <p class="page-subtitle">Gestión completa del producto</p>
+  </div>
+  <div class="page-actions">
+    <%= link_to "Volver", products_path, class: "btn btn-secondary" %>
+    <%= button_to "Eliminar", product_path(@product), 
+                 method: :delete,
+                 class: "btn btn-danger",
+                 form: { onsubmit: "return confirm('¿Eliminar #{@product.name}? Esta acción no se puede deshacer.')" } %>
   </div>
 </div>
 
-<div class="row row-2">
+<div class="grid grid-2">
   <div>
-    <div class="card-widget">
+    <div class="card">
       <div class="card-header">
-        <h3 class="card-title">Información del Producto</h3>
+        <h3 class="card-title">Editar Información</h3>
       </div>
       <div class="card-body">
-        <div class="info-item">
-          <strong>ID:</strong> <%= @product.id %>
-        </div>
-        <div class="info-item">
-          <strong>Precio:</strong> ₡<%= sprintf('%.2f', @product.price) %>
-        </div>
-        <div class="info-item">
-          <strong>Stock:</strong> 
-          <%= @product.stock %>
-          <span class="badge badge-<%= @product.low_stock? ? 'warning' : 'success' %>">
-            <%= @product.low_stock? ? "Stock Bajo" : "Stock Normal" %>
-          </span>
-        </div>
-        <div class="info-item">
-          <strong>Fecha de Creación:</strong> 
-          <%= @product.created_at ? Date.parse(@product.created_at).strftime('%d/%m/%Y') : 'N/A' %>
+        <%= form_with model: @product, local: true do |form| %>
+          <div class="form-group">
+            <%= form.label :name, "Nombre del Producto", class: "form-label" %>
+            <%= form.text_field :name, class: "form-control", required: true %>
+          </div>
+          
+          <div class="form-group">
+            <%= form.label :price, "Precio (₡)", class: "form-label" %>
+            <%= form.number_field :price, step: 0.01, min: 0, class: "form-control", required: true %>
+          </div>
+          
+          <%= form.submit "Guardar Cambios", class: "btn btn-primary" %>
+        <% end %>
+        
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+          <div style="display: grid; gap: 0.5rem; font-size: 0.875rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">ID:</span>
+              <span style="color: var(--text-secondary); font-family: monospace;"><%= @product.id %></span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Estado:</span>
+              <span class="badge badge-<%= @product.low_stock? ? 'warning' : 'success' %>">
+                <%= @product.low_stock? ? "Stock Bajo" : "Stock Normal" %>
+              </span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Valor Total:</span>
+              <span class="currency">₡<%= sprintf('%.2f', @product.price * @product.stock) %></span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Creado:</span>
+              <span style="color: var(--text-secondary);">
+                <%= @product.created_at ? Date.parse(@product.created_at).strftime('%d/%m/%Y') : 'N/A' %>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
   
   <div>
-    <div class="card-widget">
+    <div class="card">
       <div class="card-header">
-        <h3 class="card-title">Entradas y Salidas de Stock</h3>
+        <h3 class="card-title">Gestión de Stock</h3>
       </div>
       <div class="card-body">
-        <div class="stock-section">
-          <h4>Entrada de Stock</h4>
+        <div style="margin-bottom: 1.5rem;">
+          <h4 style="margin-bottom: 0.75rem; font-size: 1rem;">Entrada de Stock</h4>
           <%= form_with url: update_stock_product_path(@product), method: :patch, local: true do |form| %>
             <div class="form-group">
               <%= form.label :quantity, "Cantidad", class: "form-label" %>
@@ -55,12 +79,13 @@
           <% end %>
         </div>
         
-        <div class="stock-section">
-          <h4>Salida de Stock</h4>
+        <div>
+          <h4 style="margin-bottom: 0.75rem; font-size: 1rem;">Salida de Stock</h4>
           <%= form_with url: update_stock_product_path(@product), method: :patch, local: true do |form| %>
             <div class="form-group">
               <%= form.label :quantity, "Cantidad", class: "form-label" %>
               <%= form.number_field :quantity, min: 1, max: @product.stock, class: "form-control", placeholder: "Cantidad a retirar", required: true %>
+              <small class="form-hint">Máximo disponible: <%= @product.stock %></small>
             </div>
             <%= form.hidden_field :operation, value: "subtract" %>
             <%= form.submit "Retirar Stock", class: "btn btn-warning" %>
@@ -70,33 +95,3 @@
     </div>
   </div>
 </div>
-
-<style>
-.info-item {
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #f8f9fa;
-}
-
-.info-item:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.stock-section {
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 6px;
-}
-
-.stock-section h4 {
-  margin-bottom: 1rem;
-  color: #2c3e50;
-  font-size: 1rem;
-}
-
-.stock-section:last-child {
-  margin-bottom: 0;
-}
-</style>

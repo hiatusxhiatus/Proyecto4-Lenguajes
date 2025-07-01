@@ -1,17 +1,17 @@
-<!-- app/views/invoices/edit.html.erb -->
-<div class="page-header-widget">
-  <div class="page-header-content">
+<div class="page-header">
+  <div>
     <h1 class="page-title">Editar Factura #<%= @invoice.invoice_number %></h1>
-    <div class="page-header-actions">
-      <%= link_to "Ver Factura", invoice_path(@invoice), class: "btn btn-primary" %>
-      <%= link_to "Volver", invoices_path, class: "btn btn-secondary" %>
-    </div>
+    <p class="page-subtitle">Modifica productos y cliente</p>
+  </div>
+  <div class="page-actions">
+    <%= link_to "Ver Factura", invoice_path(@invoice), class: "btn btn-primary" %>
+    <%= link_to "Volver", invoices_path, class: "btn btn-secondary" %>
   </div>
 </div>
 
-<div class="row row-2">
+<div class="grid grid-2">
   <div>
-    <div class="card-widget">
+    <div class="card">
       <div class="card-header">
         <h3 class="card-title">Información del Cliente</h3>
       </div>
@@ -22,13 +22,13 @@
       </div>
     </div>
 
-    <div class="card-widget">
+    <div class="card">
       <div class="card-header">
         <h3 class="card-title">Productos en la Factura</h3>
       </div>
       <div class="card-body">
         <% if @invoice.items.any? %>
-          <div class="table-widget">
+          <div class="table-container">
             <table class="table">
               <thead>
                 <tr>
@@ -38,43 +38,53 @@
                   <th>Subtotal</th>
                   <th>Impuesto</th>
                   <th>Total</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                <% @invoice.items.each do |item| %>
+                <% @invoice.items.each_with_index do |item, index| %>
                   <tr>
                     <td><%= item['product_name'] %></td>
                     <td><%= item['quantity'] %></td>
-                    <td>₡<%= sprintf('%.2f', item['unit_price']) %></td>
-                    <td>₡<%= sprintf('%.2f', item['quantity'] * item['unit_price']) %></td>
+                    <td class="currency">₡<%= sprintf('%.2f', item['unit_price']) %></td>
+                    <td class="currency">₡<%= sprintf('%.2f', item['quantity'] * item['unit_price']) %></td>
                     <td><%= item['tax_rate_name'] %> (<%= item['tax_percentage'] %>%)</td>
-                    <td><strong>₡<%= sprintf('%.2f', item['quantity'] * item['unit_price'] * (1 + item['tax_percentage']/100)) %></strong></td>
+                    <td class="currency"><strong>₡<%= sprintf('%.2f', item['quantity'] * item['unit_price'] * (1 + item['tax_percentage']/100)) %></strong></td>
+                    <td>
+                      <%= button_to "×", remove_item_invoice_path(@invoice, item_index: index), 
+                                   method: :delete,
+                                   class: "btn btn-sm btn-danger",
+                                   form: { onsubmit: "return confirm('¿Eliminar este producto?')" } %>
+                    </td>
                   </tr>
                 <% end %>
               </tbody>
             </table>
           </div>
           
-          <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #3498db;">
+          <div style="background: var(--bg-tertiary); padding: 1rem; border-radius: 4px; margin-top: 1rem;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
               <span>Subtotal:</span>
-              <strong>₡<%= sprintf('%.2f', @invoice.subtotal) %></strong>
+              <strong class="currency">₡<%= sprintf('%.2f', @invoice.subtotal) %></strong>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
               <span>Total Impuestos:</span>
-              <strong>₡<%= sprintf('%.2f', @invoice.tax_total) %></strong>
+              <strong class="currency">₡<%= sprintf('%.2f', @invoice.tax_total) %></strong>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold; padding-top: 1rem; border-top: 2px solid #dee2e6;">
+            <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 600; padding-top: 0.75rem; border-top: 1px solid var(--border);">
               <span>TOTAL:</span>
-              <strong>₡<%= sprintf('%.2f', @invoice.total) %></strong>
+              <strong class="currency">₡<%= sprintf('%.2f', @invoice.total) %></strong>
             </div>
           </div>
 
-          <div style="margin-top: 1.5rem;">
-            <%= button_to "Finalizar Factura", finalize_invoice_path(@invoice), method: :post, class: "btn btn-success", form: { onsubmit: "return confirm('¿Finalizar factura y descontar stock?')" } %>
+          <div style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+            <%= form_with model: @invoice, local: true, style: "display: inline;" do |form| %>
+              <%= form.submit "Guardar Cambios", class: "btn btn-primary" %>
+            <% end %>
+            <%= link_to "Ver Factura", invoice_path(@invoice), class: "btn btn-secondary" %>
           </div>
         <% else %>
-          <div class="empty-state-widget">
+          <div class="empty-state">
             <h4>No hay productos en esta factura</h4>
             <p>Usa el siguiente panel para agregar productos</p>
           </div>
@@ -84,7 +94,7 @@
   </div>
   
   <div>
-    <div class="card-widget">
+    <div class="card">
       <div class="card-header">
         <h3 class="card-title">Agregar Producto</h3>
       </div>
@@ -115,15 +125,15 @@
         <% end %>
         
         <% if @products.empty? %>
-          <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 4px; text-align: center;">
-            <p style="margin: 0; color: #6c757d;">No hay productos disponibles</p>
+          <div style="margin-top: 1rem; padding: 0.75rem; background: var(--bg-tertiary); border-radius: 4px; text-align: center;">
+            <p style="margin: 0; color: var(--text-muted);">No hay productos disponibles</p>
             <%= link_to "Crear producto", new_product_path, class: "btn btn-primary", style: "margin-top: 0.5rem;" %>
           </div>
         <% end %>
         
         <% if @tax_rates.empty? %>
-          <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 4px; text-align: center;">
-            <p style="margin: 0; color: #6c757d;">No hay tasas de impuesto configuradas</p>
+          <div style="margin-top: 1rem; padding: 0.75rem; background: var(--bg-tertiary); border-radius: 4px; text-align: center;">
+            <p style="margin: 0; color: var(--text-muted);">No hay tasas de impuesto configuradas</p>
             <%= link_to "Configurar tasas", new_tax_rate_path, class: "btn btn-primary", style: "margin-top: 0.5rem;" %>
           </div>
         <% end %>

@@ -1,0 +1,40 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Nuevo Producto</h1>
+    <p class="page-subtitle">Agrega un producto al inventario</p>
+  </div>
+  <div class="page-actions">
+    <%= link_to "Cancelar", products_path, class: "btn btn-secondary" %>
+  </div>
+</div>
+
+<div class="card" style="max-width: 600px;">
+  <div class="card-header">
+    <h3 class="card-title">Información del Producto</h3>
+  </div>
+  <div class="card-body">
+    <%= form_with model: @product, local: true do |form| %>
+      <div class="form-group">
+        <%= form.label :name, "Nombre del Producto", class: "form-label" %>
+        <%= form.text_field :name, class: "form-control", placeholder: "Ej: Laptop Dell Inspiron", required: true %>
+      </div>
+      
+      <div class="form-group">
+        <%= form.label :price, "Precio (₡)", class: "form-label" %>
+        <%= form.number_field :price, step: 0.01, min: 0, class: "form-control", placeholder: "0.00", required: true %>
+        <small class="form-hint">Precio en colones costarricenses</small>
+      </div>
+      
+      <div class="form-group">
+        <%= form.label :stock, "Stock Inicial", class: "form-label" %>
+        <%= form.number_field :stock, min: 0, class: "form-control", placeholder: "0", required: true %>
+        <small class="form-hint">Cantidad inicial en inventario</small>
+      </div>
+      
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+        <%= form.submit "Crear Producto", class: "btn btn-primary" %>
+        <%= link_to "Cancelar", products_path, class: "btn btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

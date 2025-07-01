@@ -1,7 +1,7 @@
 <div class="page-header">
   <div>
-    <h1 class="page-title">📦 Inventario</h1>
-    <p style="color: var(--text-muted); margin-top: 0.5rem;">Gestiona tu catálogo de productos</p>
+    <h1 class="page-title">Inventario</h1>
+    <p class="page-subtitle">Gestiona tu catálogo de productos</p>
   </div>
   <div class="page-actions">
     <%= link_to "Nuevo Producto", new_product_path, class: "btn btn-primary" %>
@@ -10,29 +10,29 @@
 
 <% if @low_stock_products.any? %>
   <div class="alert alert-warning">
-    <strong>⚠️ Stock Crítico</strong><br>
+    <strong>Stock Crítico:</strong>
     <% @low_stock_products.each_with_index do |product, index| %>
       <%= product.name %> (<%= product.stock %> unidades)<%= ", " unless index == @low_stock_products.length - 1 %>
     <% end %>
   </div>
 <% end %>
 
-<div class="stats-grid">
-  <div class="stat-card">
+<div class="stats">
+  <div class="stat">
     <div class="stat-value"><%= @products.count %></div>
     <div class="stat-label">Productos Totales</div>
   </div>
-  <div class="stat-card">
+  <div class="stat">
     <div class="stat-value currency">₡<%= number_with_delimiter(@products.sum { |p| p.price * p.stock }, delimiter: ",") %></div>
     <div class="stat-label">Valor de Inventario</div>
   </div>
-  <div class="stat-card">
-    <div class="stat-value" style="color: var(--<%= @low_stock_products.any? ? 'warning' : 'success' %>);"><%= @products.sum(&:stock) %></div>
+  <div class="stat">
+    <div class="stat-value"><%= @products.sum(&:stock) %></div>
     <div class="stat-label">Unidades en Stock</div>
   </div>
-  <div class="stat-card">
+  <div class="stat">
     <div class="stat-value" style="color: var(--warning);"><%= @low_stock_products.count %></div>
-    <div class="stat-label">Productos con Stock Bajo</div>
+    <div class="stat-label">Stock Bajo</div>
   </div>
 </div>
 
@@ -56,16 +56,16 @@
           </thead>
           <tbody>
             <% @products.each do |product| %>
-              <tr style="<%= 'background: rgba(245, 158, 11, 0.05);' if product.low_stock? %>">
+              <tr>
                 <td>
                   <div style="font-weight: 600; color: var(--text-primary);"><%= product.name %></div>
-                  <div style="font-size: 0.8rem; color: var(--text-muted);">ID: <%= product.id %></div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">ID: <%= product.id %></div>
                 </td>
                 <td>
                   <span class="currency">₡<%= number_with_delimiter(product.price, delimiter: ",") %></span>
                 </td>
                 <td>
-                  <span style="font-weight: 600; font-size: 1.1rem; color: var(--<%= product.low_stock? ? 'warning' : 'text-primary' %>);">
+                  <span style="font-weight: 600; color: var(--<%= product.low_stock? ? 'warning' : 'text-primary' %>);">
                     <%= product.stock %>
                   </span>
                 </td>
@@ -78,13 +78,11 @@
                   <span class="currency">₡<%= number_with_delimiter(product.price * product.stock, delimiter: ",") %></span>
                 </td>
                 <td>
-                  <div style="display: flex; gap: 0.5rem;">
-                    <%= link_to "Ver", product_path(product), class: "btn btn-sm btn-secondary" %>
-                    <%= link_to "Editar", edit_product_path(product), class: "btn btn-sm btn-secondary" %>
-                    <%= button_to "×", product_path(product), 
+                  <div style="display: flex; gap: 0.25rem;">
+                    <%= link_to "Gestionar", product_path(product), class: "btn btn-sm btn-primary" %>
+                    <%= button_to "Eliminar", product_path(product), 
                                  method: :delete,
                                  class: "btn btn-sm btn-danger",
-                                 title: "Eliminar producto",
                                  form: { onsubmit: "return confirm('¿Eliminar #{product.name}?')" } %>
                   </div>
                 </td>
@@ -99,7 +97,6 @@
   <div class="card">
     <div class="card-body">
       <div class="empty-state">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
         <h3>Sin productos registrados</h3>
         <p>Comienza agregando tu primer producto al inventario</p>
         <%= link_to "Crear Primer Producto", new_product_path, class: "btn btn-primary", style: "margin-top: 1rem;" %>
@@ -107,9 +104,3 @@
     </div>
   </div>
 <% end %>
-
-<script>
-function numberWithDelimiter(number) {
-  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-</script>

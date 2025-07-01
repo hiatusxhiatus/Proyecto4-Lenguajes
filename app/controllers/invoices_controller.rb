@@ -67,12 +67,16 @@ class InvoicesController < ApplicationController
       return
     end
     
-    @invoice.client_name = invoice_params[:client_name]
-    @invoice.client_email = invoice_params[:client_email]
+    # Solo actualizar información del cliente si se proporcionan esos campos
+    if params[:invoice].present?
+      @invoice.client_name = invoice_params[:client_name] if invoice_params[:client_name].present?
+      @invoice.client_email = invoice_params[:client_email] if params[:invoice][:client_email]
+    end
     
     if @invoice.save
-      redirect_to @invoice, notice: 'Factura actualizada exitosamente'
+      redirect_to edit_invoice_path(@invoice), notice: 'Factura actualizada exitosamente'
     else
+      load_form_data
       render :edit, status: :unprocessable_entity
     end
   end

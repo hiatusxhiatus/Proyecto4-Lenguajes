@@ -1,6 +1,5 @@
-# app/controllers/products_controller.rb
 class ProductsController < ApplicationController
-  before_action :find_product, only: [:show, :edit, :update, :destroy, :update_stock]
+  before_action :find_product, only: [:show, :update, :destroy, :update_stock]
 
   def index
     @products = Product.all
@@ -8,7 +7,6 @@ class ProductsController < ApplicationController
   end
 
   def show
-    # @product ya está cargado por before_action
   end
 
   def new
@@ -19,14 +17,10 @@ class ProductsController < ApplicationController
     @product = Product.new(product_params)
     
     if @product.save
-      redirect_to products_path, notice: 'Producto creado exitosamente'
+      redirect_to @product, notice: 'Producto creado exitosamente'
     else
       render :new, status: :unprocessable_entity
     end
-  end
-
-  def edit
-    # @product ya está cargado por before_action
   end
 
   def update    
@@ -35,9 +29,9 @@ class ProductsController < ApplicationController
     @product.stock = product_params[:stock].to_i
     
     if @product.save
-      redirect_to products_path, notice: 'Producto actualizado exitosamente'
+      redirect_to @product, notice: 'Producto actualizado exitosamente'
     else
-      render :edit, status: :unprocessable_entity
+      render :show, status: :unprocessable_entity
     end
   end
 

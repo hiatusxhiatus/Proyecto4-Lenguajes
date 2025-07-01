@@ -1,19 +1,14 @@
-# config/routes.rb
 Rails.application.routes.draw do
-  # Ruta principal
   root 'products#index'
   
-  # Rutas de productos
-  resources :products do
+  resources :products, except: [:edit] do
     member do
       patch :update_stock
     end
   end
   
-  # Rutas de tasas de impuesto
   resources :tax_rates
   
-  # Rutas de facturas
   resources :invoices do
     member do
       post :add_item
@@ -23,6 +18,5 @@ Rails.application.routes.draw do
     end
   end
   
-  # Ruta de salud (opcional, para verificar que la app funciona)
   get '/health', to: proc { [200, {}, ['OK']] }
 end

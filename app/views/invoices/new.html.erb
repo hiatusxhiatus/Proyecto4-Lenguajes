@@ -1,18 +1,18 @@
 <div class="page-header">
   <div>
-    <h1 class="page-title">🆕 Nueva Factura</h1>
-    <p style="color: var(--text-muted); margin-top: 0.5rem;">Crea una factura completa con productos e impuestos</p>
+    <h1 class="page-title">Nueva Factura</h1>
+    <p class="page-subtitle">Crea una factura completa con productos e impuestos</p>
   </div>
   <div class="page-actions">
     <%= link_to "Cancelar", invoices_path, class: "btn btn-secondary" %>
   </div>
 </div>
 
-<div class="grid grid-cols-2">
+<div class="grid grid-2">
   <div>
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">👤 Información del Cliente</h3>
+        <h3 class="card-title">Información del Cliente</h3>
       </div>
       <div class="card-body">
         <%= form_with model: @invoice, local: true, id: "invoice-form" do |form| %>
@@ -33,37 +33,36 @@
     <div class="card">
       <div class="card-header">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h3 class="card-title">🛒 Productos Agregados</h3>
+          <h3 class="card-title">Productos Agregados</h3>
           <span id="items-count" class="badge badge-success" style="display: none;">0 productos</span>
         </div>
       </div>
       <div class="card-body">
         <div id="invoice-items">
           <div class="empty-state" id="empty-state">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📦</div>
             <h4>Sin productos</h4>
             <p>Agrega productos usando el panel lateral</p>
           </div>
         </div>
         
-        <div id="totals-summary" style="display: none; background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%); padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border); margin-top: 1.5rem;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+        <div id="totals-summary" style="display: none; background: var(--bg-tertiary); padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
             <span>Subtotal:</span>
             <strong id="subtotal-amount" class="currency">₡0</strong>
           </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
             <span>Impuestos:</span>
             <strong id="tax-amount" class="currency">₡0</strong>
           </div>
-          <hr style="border: none; border-top: 1px solid var(--border); margin: 1rem 0;">
-          <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 700;">
+          <hr style="border: none; border-top: 1px solid var(--border); margin: 0.75rem 0;">
+          <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 600;">
             <span>TOTAL:</span>
             <strong id="total-amount" class="currency">₡0</strong>
           </div>
         </div>
 
-        <button type="button" id="create-invoice-btn" class="btn btn-primary" style="display: none; width: 100%; margin-top: 1.5rem;" onclick="submitInvoice()">
-          🎯 Crear Factura Completa
+        <button type="button" id="create-invoice-btn" class="btn btn-primary" style="display: none; width: 100%; margin-top: 1rem;" onclick="submitInvoice()">
+          Crear Factura Completa
         </button>
       </div>
     </div>
@@ -72,7 +71,7 @@
   <div>
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">➕ Agregar Producto</h3>
+        <h3 class="card-title">Agregar Producto</h3>
       </div>
       <div class="card-body">
         <% if @products.any? && @tax_rates.any? %>
@@ -113,11 +112,10 @@
           </div>
           
           <button type="button" onclick="addProductToInvoice()" class="btn btn-primary" style="width: 100%;">
-            ➕ Agregar a Factura
+            Agregar a Factura
           </button>
         <% else %>
           <div class="empty-state">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
             <h4>Configuración Incompleta</h4>
             <% if @products.empty? %>
               <p>No hay productos disponibles</p>
@@ -210,15 +208,13 @@ function updateDisplay() {
   const itemsCount = document.getElementById('items-count');
   
   if (invoiceItems.length === 0) {
-    emptyState.style.display = 'block';
+    container.innerHTML = '<div class="empty-state" id="empty-state"><h4>Sin productos</h4><p>Agrega productos usando el panel lateral</p></div>';
     totalsSection.style.display = 'none';
     createBtn.style.display = 'none';
     itemsCount.style.display = 'none';
-    container.innerHTML = '<div class="empty-state" id="empty-state"><div style="font-size: 2rem; margin-bottom: 0.5rem;">📦</div><h4>Sin productos</h4><p>Agrega productos usando el panel lateral</p></div>';
     return;
   }
   
-  emptyState.style.display = 'none';
   totalsSection.style.display = 'block';
   createBtn.style.display = 'block';
   itemsCount.style.display = 'inline-flex';
@@ -253,14 +249,14 @@ function updateDisplay() {
     html += `
       <tr>
         <td>
-          <div style="font-weight: 600; color: var(--text-primary);">${item.product_name}</div>
-          <div style="font-size: 0.8rem; color: var(--text-muted);">${item.tax_rate_name} (${item.tax_percentage}%)</div>
+          <div style="font-weight: 500; color: var(--text-primary);">${item.product_name}</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">${item.tax_rate_name} (${item.tax_percentage}%)</div>
         </td>
-        <td style="font-weight: 600;">${item.quantity}</td>
+        <td style="font-weight: 500;">${item.quantity}</td>
         <td class="currency">₡${numberWithDelimiter(item.unit_price)}</td>
-        <td class="currency" style="font-weight: 700;">₡${numberWithDelimiter(lineTotal)}</td>
+        <td class="currency" style="font-weight: 600;">₡${numberWithDelimiter(lineTotal)}</td>
         <td>
-          <button type="button" onclick="removeItem(${item.tempId})" class="btn btn-sm btn-danger" title="Eliminar">
+          <button type="button" onclick="removeItem(${item.tempId})" class="btn btn-sm btn-danger">
             ×
           </button>
         </td>
@@ -299,8 +295,7 @@ function submitInvoice() {
   
   const createBtn = document.getElementById('create-invoice-btn');
   createBtn.disabled = true;
-  createBtn.innerHTML = '⏳ Creando Factura...';
-  createBtn.classList.add('loading');
+  createBtn.innerHTML = 'Creando Factura...';
   
   const form = document.getElementById('invoice-form');
   
@@ -325,12 +320,12 @@ function submitInvoice() {
 function showAlert(message, type) {
   const alertDiv = document.createElement('div');
   alertDiv.className = `alert alert-${type} fade-in`;
-  alertDiv.innerHTML = `<strong>${type === 'success' ? '✅' : '⚠️'}</strong> ${message}`;
+  alertDiv.innerHTML = `<strong>${type === 'success' ? 'Éxito:' : 'Aviso:'}</strong> ${message}`;
   alertDiv.style.position = 'fixed';
   alertDiv.style.top = '1rem';
   alertDiv.style.right = '1rem';
   alertDiv.style.zIndex = '1000';
-  alertDiv.style.minWidth = '300px';
+  alertDiv.style.minWidth = '280px';
   
   document.body.appendChild(alertDiv);
   

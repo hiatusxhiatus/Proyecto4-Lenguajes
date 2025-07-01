@@ -61,13 +61,13 @@
     "invoice_number": "000003",
     "client_name": "Daniel",
     "client_email": "dzeas@tec.ac.cr",
-    "status": "draft",
+    "status": "finalized",
     "items": [
       {
-        "product_id": "2",
-        "product_name": "Mouse Inalámbrico Logitech",
-        "quantity": 2,
-        "unit_price": 15000.0,
+        "product_id": "6",
+        "product_name": "Macbook Air M1 2020",
+        "quantity": 3,
+        "unit_price": 700000.0,
         "tax_rate_id": "1",
         "tax_rate_name": "IVA",
         "tax_percentage": 13.0
@@ -75,6 +75,55 @@
     ],
     "id": "3",
     "created_at": "2025-07-01 18:24:19 UTC",
-    "updated_at": "2025-07-01 18:24:19 UTC"
+    "updated_at": "2025-07-01 19:15:00 UTC"
+  },
+  {
+    "invoice_number": "000004",
+    "client_name": "Pepito",
+    "client_email": "pepito@tec.ac.cr",
+    "status": "finalized",
+    "items": [
+      {
+        "product_id": "2",
+        "product_name": "Mouse Inalámbrico Logitech",
+        "quantity": 1,
+        "unit_price": 15000.0,
+        "tax_rate_id": "1",
+        "tax_rate_name": "IVA",
+        "tax_percentage": 13.0
+      },
+      {
+        "product_id": "4",
+        "product_name": "Monitor 24 pulgadas",
+        "quantity": 2,
+        "unit_price": 180000.0,
+        "tax_rate_id": "3",
+        "tax_rate_name": "Servicios",
+        "tax_percentage": 4.0
+      }
+    ],
+    "id": "4",
+    "created_at": "2025-07-01 18:57:10 UTC",
+    "updated_at": "2025-07-01 19:08:05 UTC"
+  },
+  {
+    "invoice_number": "000005",
+    "client_name": "Pablo",
+    "client_email": "pablito@estudiantec.cr",
+    "status": "draft",
+    "items": [
+      {
+        "product_id": "6",
+        "product_name": "Macbook Air M1 2020",
+        "quantity": 4,
+        "unit_price": 700000.0,
+        "tax_rate_id": "1",
+        "tax_rate_name": "IVA",
+        "tax_percentage": 13.0
+      }
+    ],
+    "id": "5",
+    "created_at": "2025-07-01 19:09:32 UTC",
+    "updated_at": "2025-07-01 19:09:55 UTC"
   }
 ]

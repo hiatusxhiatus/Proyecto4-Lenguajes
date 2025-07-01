@@ -1,41 +1,35 @@
-<!-- app/views/tax_rates/new.html.erb -->
-<div class="page-header-widget">
-  <div class="page-header-content">
+<div class="page-header">
+  <div>
     <h1 class="page-title">Nueva Tasa de Impuesto</h1>
-    <div class="page-header-actions">
-      <%= link_to "Volver", tax_rates_path, class: "btn btn-secondary" %>
-    </div>
+    <p class="page-subtitle">Configura una nueva tasa para tus productos</p>
+  </div>
+  <div class="page-actions">
+    <%= link_to "Cancelar", tax_rates_path, class: "btn btn-secondary" %>
   </div>
 </div>
 
-<div class="form-widget">
-  <div class="card-widget">
-    <div class="card-header">
-      <h3 class="card-title">Configurar Nueva Tasa</h3>
-    </div>
-    <div class="card-body">
-      <%= form_with model: @tax_rate, local: true, class: "form-component" do |form| %>
-        <div class="form-fields">
-          <div class="form-row">
-            <div class="form-group">
-              <%= form.label :name, "Nombre de la Tasa", class: "form-label" %>
-              <%= form.text_field :name, class: "form-control", placeholder: "Ej: IVA, Exento, Servicios", required: true %>
-              <small class="form-hint">Nombre descriptivo para identificar esta tasa</small>
-            </div>
-            
-            <div class="form-group">
-              <%= form.label :percentage, "Porcentaje (%)", class: "form-label" %>
-              <%= form.number_field :percentage, step: 0.01, min: 0, max: 100, class: "form-control", placeholder: "Ej: 13.00", required: true %>
-              <small class="form-hint">Introduce el porcentaje sin el símbolo %</small>
-            </div>
-          </div>
-        </div>
-        
-        <div class="form-actions">
-          <%= form.submit "Crear Tasa", class: "btn btn-primary" %>
-          <%= link_to "Cancelar", tax_rates_path, class: "btn btn-secondary" %>
-        </div>
-      <% end %>
-    </div>
+<div class="card" style="max-width: 600px;">
+  <div class="card-header">
+    <h3 class="card-title">Configurar Nueva Tasa</h3>
+  </div>
+  <div class="card-body">
+    <%= form_with model: @tax_rate, local: true do |form| %>
+      <div class="form-group">
+        <%= form.label :name, "Nombre de la Tasa", class: "form-label" %>
+        <%= form.text_field :name, class: "form-control", placeholder: "Ej: IVA, Exento, Servicios", required: true %>
+        <small class="form-hint">Nombre descriptivo para identificar esta tasa</small>
+      </div>
+      
+      <div class="form-group">
+        <%= form.label :percentage, "Porcentaje (%)", class: "form-label" %>
+        <%= form.number_field :percentage, step: 0.01, min: 0, max: 100, class: "form-control", placeholder: "Ej: 13.00", required: true %>
+        <small class="form-hint">Introduce el porcentaje sin el símbolo %</small>
+      </div>
+      
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+        <%= form.submit "Crear Tasa", class: "btn btn-primary" %>
+        <%= link_to "Cancelar", tax_rates_path, class: "btn btn-secondary" %>
+      </div>
+    <% end %>
   </div>
 </div>
